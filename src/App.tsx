@@ -1,7 +1,6 @@
+import { RouterProvider } from 'react-router-dom'
+import { router } from './app/router'
+
 export default function App() {
-  return (
-    <main>
-      <h1>World Cup Stickers Tracker</h1>
-    </main>
-  )
+  return <RouterProvider router={router} />
 }
