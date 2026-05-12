@@ -17,6 +17,7 @@ export type TeamGroup =
 export type Team = {
   id: string
   name: string
+  flag: string
   group: TeamGroup
   order: number
 }

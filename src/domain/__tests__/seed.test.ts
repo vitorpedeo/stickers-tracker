@@ -7,6 +7,11 @@ describe('seed data', () => {
     expect(seeded.teams).toHaveLength(48)
   })
 
+  it('includes a flag for every team', () => {
+    const seeded = buildInitialCollection()
+    expect(seeded.teams.every((team) => team.flag.trim().length > 0)).toBe(true)
+  })
+
   it('contains 980 stickers total', () => {
     const seeded = buildInitialCollection()
     expect(seeded.stickers).toHaveLength(980)

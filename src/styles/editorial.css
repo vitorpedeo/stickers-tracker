@@ -141,6 +141,12 @@
   font-size: 1.1rem;
 }
 
+.team-card-flag {
+  margin: 0 0 var(--space-2);
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
 @media (max-width: 640px) {
   .app-header,
   .app-content {

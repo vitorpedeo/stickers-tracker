@@ -33,20 +33,35 @@ describe('Team detail interactions', () => {
       </QueryClientProvider>,
     )
 
-    const stickerTile = await screen.findByRole('article', { name: /sticker 01-01/i })
+    const getFirstStickerTile = () =>
+      screen.getByRole('article', { name: /sticker 01-01/i })
 
-    await user.click(within(stickerTile).getByRole('button', { name: /set collected/i }))
-    await user.click(within(stickerTile).getByRole('button', { name: /increase duplicates/i }))
+    await screen.findByRole('article', { name: /sticker 01-01/i })
+    await user.click(
+      within(getFirstStickerTile()).getByRole('button', { name: /set collected/i }),
+    )
+    await within(getFirstStickerTile()).findByRole('button', { name: /set missing/i })
+    await user.click(
+      within(getFirstStickerTile()).getByRole('button', { name: /increase duplicates/i }),
+    )
 
-    expect(await within(stickerTile).findByText(/duplicates: 1/i)).toBeInTheDocument()
+    expect(
+      await within(getFirstStickerTile()).findByText((text) => text.includes('Duplicates: 1')),
+    ).toBeInTheDocument()
 
-    const noteField = within(stickerTile).getByLabelText(/trade note/i)
+    const noteField = within(getFirstStickerTile()).getByLabelText(/trade note/i)
     await user.type(noteField, 'need for swap')
     expect(noteField).toHaveValue('need for swap')
 
-    await user.click(within(stickerTile).getByRole('button', { name: /set missing/i }))
+    await user.click(
+      within(getFirstStickerTile()).getByRole('button', { name: /set missing/i }),
+    )
 
-    expect(await within(stickerTile).findByText(/duplicates: 0/i)).toBeInTheDocument()
-    expect(within(stickerTile).getByRole('button', { name: /increase duplicates/i })).toBeDisabled()
+    expect(
+      await within(getFirstStickerTile()).findByText((text) => text.includes('Duplicates: 0')),
+    ).toBeInTheDocument()
+    expect(
+      within(getFirstStickerTile()).getByRole('button', { name: /increase duplicates/i }),
+    ).toBeDisabled()
   })
 })

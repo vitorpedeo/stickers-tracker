@@ -18,6 +18,9 @@ export function TeamsPage() {
         {teams.map((team) => (
           <Link key={team.id} className="team-card" to={`/teams/${team.id}`}>
             <p className="team-card-group">Group {team.group}</p>
+            <p className="team-card-flag" aria-label={`${team.name} flag`}>
+              {team.flag}
+            </p>
             <h3 className="team-card-name">{team.name}</h3>
           </Link>
         ))}
