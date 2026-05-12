@@ -13,6 +13,7 @@ type Repository = {
   getSeedVersion: () => Promise<string | undefined>
   getEntry: (stickerId: string) => Promise<CollectionEntry | undefined>
   updateSticker: (stickerId: string, patch: StickerPatch) => Promise<CollectionEntry>
+  listTeams: () => Promise<SeedBundle['teams']>
   listStickers: () => Promise<SeedBundle['stickers']>
   listEntries: () => Promise<CollectionEntry[]>
   initializeSeed: (bundle: SeedBundle) => Promise<boolean>
@@ -69,6 +70,10 @@ export function createRepository(): Repository {
 
     async listStickers() {
       return db.stickers.toArray()
+    },
+
+    async listTeams() {
+      return db.teams.orderBy('order').toArray()
     },
 
     async listEntries() {

@@ -33,3 +33,11 @@ export function useDashboardSummary(enabled: boolean) {
     enabled,
   })
 }
+
+export function useTeams(enabled: boolean) {
+  return useQuery({
+    queryKey: ['teams'],
+    queryFn: () => repository.listTeams(),
+    enabled,
+  })
+}
