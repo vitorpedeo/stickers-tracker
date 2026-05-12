@@ -1,9 +1,23 @@
 export type StickerStatus = 'missing' | 'collected'
 
+export type TeamGroup =
+  | 'A'
+  | 'B'
+  | 'C'
+  | 'D'
+  | 'E'
+  | 'F'
+  | 'G'
+  | 'H'
+  | 'I'
+  | 'J'
+  | 'K'
+  | 'L'
+
 export type Team = {
   id: string
   name: string
-  group: string
+  group: TeamGroup
   order: number
 }
 

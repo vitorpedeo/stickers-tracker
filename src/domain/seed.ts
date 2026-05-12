@@ -40,9 +40,10 @@ function buildSpecialStickers(): Sticker[] {
 export function buildInitialCollection(): SeedBundle {
   const teamStickers = buildTeamStickers()
   const specialStickers = buildSpecialStickers()
+  const teams = teams2026.map((team) => ({ ...team }))
 
   return {
-    teams: teams2026,
+    teams,
     stickers: [...teamStickers, ...specialStickers],
   }
 }
