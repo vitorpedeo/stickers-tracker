@@ -1,24 +1,25 @@
-import { useQuery } from '@tanstack/react-query'
-import { queryClient } from '../../app/queryClient'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { repository } from '../../data/repositorySingleton'
 import { buildInitialCollection } from '../../domain/seed'
 import { summarizeCollection } from '../../domain/selectors'
 
 export function useInitializeSeed() {
+  const queryClient = useQueryClient()
+
   return useQuery({
     queryKey: ['seed-init'],
     queryFn: async () => {
-      const stickers = await repository.listStickers()
+      const reseeded = await repository.initializeSeed(buildInitialCollection())
 
-      if (stickers.length === 0) {
-        await repository.seed(buildInitialCollection())
+      if (reseeded) {
+        await queryClient.invalidateQueries({ queryKey: ['summary'] })
       }
 
       return true
     },
     staleTime: Number.POSITIVE_INFINITY,
     gcTime: Number.POSITIVE_INFINITY,
-  }, queryClient)
+  })
 }
 
 export function useDashboardSummary(enabled: boolean) {
@@ -30,5 +31,5 @@ export function useDashboardSummary(enabled: boolean) {
       return summarizeCollection(stickers, entries)
     },
     enabled,
-  }, queryClient)
+  })
 }
