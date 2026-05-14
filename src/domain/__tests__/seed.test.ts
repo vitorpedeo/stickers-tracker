@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { buildInitialCollection } from '../seed'
 
 describe('seed data', () => {
-  it('contains 48 teams', () => {
+  it('contains 49 teams', () => {
     const seeded = buildInitialCollection()
-    expect(seeded.teams).toHaveLength(48)
+    expect(seeded.teams).toHaveLength(49)
   })
 
   it('includes a flag for every team', () => {
@@ -17,13 +17,13 @@ describe('seed data', () => {
     expect(seeded.stickers).toHaveLength(980)
   })
 
-  it('contains 960 team stickers and 20 special stickers', () => {
+  it('contains only team stickers', () => {
     const seeded = buildInitialCollection()
     const teamStickers = seeded.stickers.filter((sticker) => sticker.category === 'team')
     const specialStickers = seeded.stickers.filter((sticker) => sticker.category === 'special')
 
-    expect(teamStickers).toHaveLength(960)
-    expect(specialStickers).toHaveLength(20)
+    expect(teamStickers).toHaveLength(980)
+    expect(specialStickers).toHaveLength(0)
   })
 
   it('uses valid team ids for every team sticker', () => {
@@ -31,7 +31,11 @@ describe('seed data', () => {
     const validTeamIds = new Set(seeded.teams.map((team) => team.id))
     const teamStickers = seeded.stickers.filter((sticker) => sticker.category === 'team')
 
-    expect(teamStickers.every((sticker) => sticker.teamId !== null && validTeamIds.has(sticker.teamId))).toBe(true)
+    expect(
+      teamStickers.every(
+        (sticker) => sticker.teamId !== null && validTeamIds.has(sticker.teamId),
+      ),
+    ).toBe(true)
   })
 
   it('returns isolated team objects between calls', () => {

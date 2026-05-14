@@ -1,6 +1,5 @@
-import 'fake-indexeddb/auto'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -14,7 +13,7 @@ describe('Team detail interactions', () => {
     await repository.seed(buildInitialCollection())
   })
 
-  it('supports status toggle, duplicate increment, and note edit', async () => {
+  it('supports click cycling, right-click selection, and bulk duplicate action', async () => {
     const user = userEvent.setup()
     const queryClient = new QueryClient({
       defaultOptions: {
@@ -33,35 +32,30 @@ describe('Team detail interactions', () => {
       </QueryClientProvider>,
     )
 
-    const getFirstStickerTile = () =>
-      screen.getByRole('article', { name: /sticker 01-01/i })
+    const firstSticker = await screen.findByRole('button', { name: /sticker 01/i })
+    expect(within(firstSticker).getByText(/missing/i)).toBeInTheDocument()
 
-    await screen.findByRole('article', { name: /sticker 01-01/i })
-    await user.click(
-      within(getFirstStickerTile()).getByRole('button', { name: /set collected/i }),
-    )
-    await within(getFirstStickerTile()).findByRole('button', { name: /set missing/i })
-    await user.click(
-      within(getFirstStickerTile()).getByRole('button', { name: /increase duplicates/i }),
-    )
+    await user.click(firstSticker)
+    expect(await within(firstSticker).findByText(/collected/i)).toBeInTheDocument()
 
-    expect(
-      await within(getFirstStickerTile()).findByText((text) => text.includes('Duplicates: 1')),
-    ).toBeInTheDocument()
+    await user.click(firstSticker)
+    expect(await within(firstSticker).findByText(/dupes x2/i)).toBeInTheDocument()
 
-    const noteField = within(getFirstStickerTile()).getByLabelText(/trade note/i)
-    await user.type(noteField, 'need for swap')
-    expect(noteField).toHaveValue('need for swap')
+    await user.click(firstSticker)
+    expect(await within(firstSticker).findByText(/missing/i)).toBeInTheDocument()
 
-    await user.click(
-      within(getFirstStickerTile()).getByRole('button', { name: /set missing/i }),
-    )
+    fireEvent.contextMenu(firstSticker)
+    expect(firstSticker).toHaveClass('is-selected')
+    fireEvent.contextMenu(firstSticker)
+    expect(firstSticker).not.toHaveClass('is-selected')
 
-    expect(
-      await within(getFirstStickerTile()).findByText((text) => text.includes('Duplicates: 0')),
-    ).toBeInTheDocument()
-    expect(
-      within(getFirstStickerTile()).getByRole('button', { name: /increase duplicates/i }),
-    ).toBeDisabled()
+    const bulkInput = screen.getByRole('textbox', { name: /bulk sticker list/i })
+    await user.clear(bulkInput)
+    await user.type(bulkInput, '1-2')
+    await user.click(screen.getByRole('button', { name: /mark duplicate/i }))
+
+    expect(await within(firstSticker).findByText(/dupes x2/i)).toBeInTheDocument()
+    const secondSticker = screen.getByRole('button', { name: /sticker 02/i })
+    expect(await within(secondSticker).findByText(/dupes x2/i)).toBeInTheDocument()
   })
 })

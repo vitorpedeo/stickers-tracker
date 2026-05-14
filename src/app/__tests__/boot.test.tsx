@@ -4,7 +4,7 @@ import App from '../../App'
 import { AppProviders } from '../providers'
 
 describe('App bootstrap', () => {
-  it('renders the app shell heading with app providers composition', () => {
+  it('renders the app shell heading with app providers composition', async () => {
     window.history.pushState({}, '', '/')
 
     render(
@@ -14,7 +14,7 @@ describe('App bootstrap', () => {
     )
 
     expect(
-      screen.getByRole('heading', { name: /world cup stickers tracker/i }),
+      await screen.findByRole('heading', { name: /world cup 2026 sticker tracker/i }),
     ).toBeInTheDocument()
   })
 })

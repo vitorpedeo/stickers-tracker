@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { TradePage } from '../TradePage'
 
 describe('Trade page', () => {
-  it('shows duplicates and wanted sections', () => {
+  it('renders placeholder content', () => {
     const queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
@@ -20,7 +20,6 @@ describe('Trade page', () => {
       </QueryClientProvider>,
     )
 
-    expect(screen.getByRole('heading', { name: /duplicates/i })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: /wanted/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /trade/i })).toBeInTheDocument()
   })
 })

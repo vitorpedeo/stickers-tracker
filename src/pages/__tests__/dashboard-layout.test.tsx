@@ -5,7 +5,7 @@ import { AppProviders } from '../../app/providers'
 import { DashboardPage } from '../DashboardPage'
 
 describe('Dashboard layout', () => {
-  it('renders the core stat ribbon cards', () => {
+  it('renders the core dashboard KPI cards', async () => {
     render(
       <AppProviders>
         <MemoryRouter>
@@ -14,9 +14,10 @@ describe('Dashboard layout', () => {
       </AppProviders>,
     )
 
-    expect(screen.getByText(/collected/i)).toBeInTheDocument()
-    expect(screen.getByText(/missing/i)).toBeInTheDocument()
-    expect(screen.getByText(/duplicates/i)).toBeInTheDocument()
-    expect(screen.getByText(/completion/i)).toBeInTheDocument()
+    expect(await screen.findByText(/album completion/i)).toBeInTheDocument()
+    expect(screen.getByText(/total stickers/i)).toBeInTheDocument()
+    expect(screen.getByText(/^collected$/i)).toBeInTheDocument()
+    expect(screen.getByText(/^missing$/i)).toBeInTheDocument()
+    expect(screen.getByText(/duplicate copies/i)).toBeInTheDocument()
   })
 })

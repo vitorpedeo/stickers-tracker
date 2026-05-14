@@ -1,155 +1,513 @@
-.app-frame {
+.app-shell {
+  position: relative;
   min-height: 100vh;
+  padding: var(--space-6) var(--space-4) calc(var(--space-8) * 3);
+  overflow: hidden;
+}
+
+.bg-glow {
+  position: fixed;
+  z-index: 0;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.bg-glow-a {
+  top: -140px;
+  left: -160px;
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, color-mix(in oklab, var(--accent) 18%, transparent) 0%, transparent 72%);
+}
+
+.bg-glow-b {
+  top: 18vh;
+  right: -220px;
+  width: 460px;
+  height: 460px;
+  background: radial-gradient(circle, color-mix(in oklab, var(--accent) 14%, transparent) 0%, transparent 74%);
+}
+
+.app-main {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1080px);
   margin: 0 auto;
-  background:
-    linear-gradient(180deg, rgba(246, 242, 231, 0.95), rgba(246, 242, 231, 0.98)),
-    repeating-linear-gradient(45deg, rgba(17, 27, 38, 0.04) 0 2px, transparent 2px 7px);
-}
-
-.app-header {
   display: grid;
-  gap: var(--space-4);
-  padding: var(--space-8) var(--space-6) var(--space-6);
-  border-bottom: 3px solid rgba(17, 27, 38, 0.12);
+  gap: var(--space-6);
 }
 
-.app-title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(2.25rem, 4.2vw, 3.75rem);
-  letter-spacing: 0.05em;
-  line-height: 0.95;
-  text-transform: uppercase;
-}
-
-.app-nav {
+.page-head {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.app-nav-link {
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid rgba(17, 27, 38, 0.15);
-  border-radius: var(--radius-pill);
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.app-nav-link-active {
-  color: var(--color-ivory);
-  background: linear-gradient(120deg, var(--color-field-deep), var(--color-field));
-  border-color: transparent;
-}
-
-.app-content {
-  padding: var(--space-6);
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
 }
 
 .page-title {
-  margin: 0 0 var(--space-2);
+  margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.9rem, 3vw, 2.8rem);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.page-lead {
-  max-width: 62ch;
-  margin: 0;
-  color: var(--color-muted);
-  line-height: 1.6;
-}
-
-.stat-ribbon {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: var(--space-4);
-  margin: var(--space-6) 0;
-}
-
-.stat-card {
-  padding: var(--space-4);
-  border: 1px solid var(--color-card-border);
-  border-radius: var(--radius-md);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.95)),
-    var(--color-card);
-  box-shadow: var(--shadow-soft);
-}
-
-.stat-label {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 0.76rem;
+  font-size: clamp(1.55rem, 2.6vw, 2.35rem);
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: -0.02em;
 }
 
-.stat-value {
+.page-subtitle {
   margin: var(--space-2) 0 0;
-  font-size: clamp(1.45rem, 2.5vw, 2rem);
-  font-weight: 800;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
 }
 
-.stat-card-accent .stat-value {
-  color: var(--color-alert);
-}
-
-.stat-card-goal .stat-value {
-  color: var(--color-field-deep);
-}
-
-.teams-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: var(--space-4);
-  margin-top: var(--space-6);
-}
-
-.team-card {
-  display: block;
-  padding: var(--space-4);
-  border: 1px solid var(--color-card-border);
+.panel {
+  background: color-mix(in oklab, var(--surface) 95%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.92), rgba(245, 241, 228, 0.94)),
-    var(--color-card);
-  box-shadow: var(--shadow-soft);
-  transition: transform 140ms ease, border-color 140ms ease;
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
 }
 
-.team-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(11, 110, 79, 0.4);
-}
-
-.team-card-group {
-  margin: 0 0 var(--space-2);
-  color: var(--color-muted);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-}
-
-.team-card-name {
+.panel-title {
   margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.chip {
+  flex: none;
+  border: 1px solid color-mix(in oklab, var(--accent) 22%, var(--border));
+  background: color-mix(in oklab, var(--accent-soft) 80%, var(--surface));
+  color: var(--accent-strong);
+  border-radius: 999px;
+  padding: 0.42rem 0.8rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.metric-card {
+  min-height: 96px;
+}
+
+.metric-card-accent {
+  border-color: color-mix(in oklab, var(--accent) 35%, var(--border));
+  background: linear-gradient(
+      160deg,
+      color-mix(in oklab, var(--accent-soft) 84%, var(--surface)),
+      var(--surface)
+    );
+}
+
+.metric-label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.metric-value {
+  margin: var(--space-2) 0 0;
+  font-size: clamp(1.24rem, 2.1vw, 1.9rem);
+  font-weight: 700;
+}
+
+.dashboard-columns {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.group-list {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.group-row {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.group-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.group-row-head p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.progress-track {
+  width: 100%;
+  height: 9px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--border) 60%, var(--surface));
+  overflow: hidden;
+}
+
+.progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+}
+
+.meta-line {
+  margin: var(--space-3) 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.meta-tip {
+  margin: var(--space-3) 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.meta-tip code {
+  font-size: 0.88em;
+  color: var(--fg);
+}
+
+.filters-panel {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.field-label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.field-input,
+.field-select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: 0.7rem 0.85rem;
+  color: var(--fg);
+}
+
+.field-input:focus-visible,
+.field-select:focus-visible,
+.btn:focus-visible,
+.bottom-nav-link:focus-visible,
+.back-chip:focus-visible,
+.sticker-cell:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 65%, transparent);
+  outline-offset: 2px;
+}
+
+.team-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.team-row {
+  display: grid;
+  gap: var(--space-3);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.team-row:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.team-row-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.team-row-identity h2 {
+  margin: 0;
+  font-family: var(--font-display);
   font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-.team-card-flag {
-  margin: 0 0 var(--space-2);
-  font-size: 1.45rem;
-  line-height: 1;
+.team-row-identity p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
 }
 
-@media (max-width: 640px) {
-  .app-header,
-  .app-content {
-    padding: var(--space-6) var(--space-4);
+.team-row-metrics {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.team-row-metrics p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.team-flag {
+  width: 2rem;
+  height: 1.4rem;
+  border-radius: 0.2rem;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.empty-state {
+  margin: 0;
+  color: var(--muted);
+}
+
+.team-head {
+  align-items: end;
+}
+
+.back-chip {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+}
+
+.team-hero {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.team-hero-flag {
+  width: 3.2rem;
+  height: 2.2rem;
+  border-radius: 0.3rem;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.bulk-panel {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.bulk-controls {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.btn {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.62rem 0.85rem;
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  border-color: color-mix(in oklab, var(--accent) 30%, var(--border));
+  background: linear-gradient(140deg, var(--accent), var(--accent-strong));
+  color: color-mix(in oklab, var(--surface) 94%, transparent);
+}
+
+.btn-danger {
+  border-color: color-mix(in oklab, var(--danger) 36%, var(--border));
+}
+
+.sticker-panel {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.stats-pill {
+  margin: 0;
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 18%, var(--border));
+  background: color-mix(in oklab, var(--accent-soft) 65%, var(--surface));
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.sticker-cell {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  min-height: 82px;
+  padding: 0.65rem;
+  text-align: left;
+  display: grid;
+  align-content: space-between;
+  gap: 0.45rem;
+  cursor: pointer;
+}
+
+.sticker-number {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.sticker-state {
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.sticker-cell.is-missing {
+  background: var(--surface);
+}
+
+.sticker-cell.is-collected {
+  background: color-mix(in oklab, var(--accent-soft) 68%, var(--surface));
+  border-color: color-mix(in oklab, var(--accent) 25%, var(--border));
+}
+
+.sticker-cell.is-duplicate {
+  background: color-mix(in oklab, var(--warn) 25%, var(--surface));
+  border-color: color-mix(in oklab, var(--warn) 45%, var(--border));
+}
+
+.sticker-cell.is-selected {
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent-strong) 45%, transparent);
+}
+
+.settings-panel {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.settings-actions {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: min(96vw, 560px);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: 18px;
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(10px);
+}
+
+.bottom-nav-link {
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  padding: 0.6rem 0.45rem;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.bottom-nav-link.is-active {
+  color: var(--accent-strong);
+  background: color-mix(in oklab, var(--accent-soft) 80%, var(--surface));
+}
+
+@media (min-width: 600px) {
+  .metrics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sticker-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .bulk-controls {
+    grid-template-columns: minmax(190px, 1.8fr) repeat(4, minmax(0, 1fr));
+    align-items: center;
+  }
+
+  .sticker-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-columns {
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  }
+
+  .sticker-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .sticker-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1440px) {
+  .app-main {
+    width: min(100%, 1180px);
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-main {
+    width: min(100%, 1320px);
+  }
+}
+
+@media (max-width: 680px) {
+  .page-head {
+    flex-direction: column;
+  }
+
+  .team-row-metrics {
+    flex-direction: column;
+  }
+
+  .bottom-nav {
+    width: min(96vw, 460px);
   }
 }

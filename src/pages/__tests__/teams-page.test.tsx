@@ -14,6 +14,7 @@ describe('TeamsPage', () => {
       </MemoryRouter>,
     )
 
+    expect(await screen.findByPlaceholderText(/search by team name/i)).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: /canada/i })).toHaveAttribute(
       'href',
       '/teams/canada',

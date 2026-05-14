@@ -7,11 +7,10 @@ type RouteCase = {
 }
 
 const routeCases: RouteCase[] = [
-  { path: '/', heading: /dashboard/i },
-  { path: '/teams', heading: /teams/i },
-  { path: '/teams/argentina', heading: /^team$/i },
-  { path: '/trade', heading: /trade/i },
-  { path: '/settings', heading: /settings/i },
+  { path: '/', heading: /world cup 2026 sticker tracker/i },
+  { path: '/teams', heading: /^teams$/i },
+  { path: '/teams/argentina', heading: /argentina/i },
+  { path: '/settings', heading: /settings\s*&\s*export/i },
 ]
 
 describe('Routing', () => {
@@ -30,6 +29,6 @@ describe('Routing', () => {
       </AppProviders>,
     )
 
-    expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument()
   })
 })

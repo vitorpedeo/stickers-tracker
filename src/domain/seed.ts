@@ -2,7 +2,6 @@ import { teams2026 } from './teams2026'
 import type { SeedBundle, Sticker } from './types'
 
 const TEAM_STICKERS_PER_TEAM = 20
-const SPECIAL_STICKER_COUNT = 20
 
 function buildTeamStickers(): Sticker[] {
   return teams2026.flatMap((team) =>
@@ -22,28 +21,11 @@ function buildTeamStickers(): Sticker[] {
   )
 }
 
-function buildSpecialStickers(): Sticker[] {
-  return Array.from({ length: SPECIAL_STICKER_COUNT }, (_, idx) => {
-    const slot = idx + 1
-    const paddedSlot = slot.toString().padStart(2, '0')
-
-    return {
-      id: `special-${paddedSlot}`,
-      teamId: null,
-      number: `S-${paddedSlot}`,
-      name: `Special Sticker ${slot}`,
-      category: 'special',
-    }
-  })
-}
-
 export function buildInitialCollection(): SeedBundle {
-  const teamStickers = buildTeamStickers()
-  const specialStickers = buildSpecialStickers()
   const teams = teams2026.map((team) => ({ ...team }))
 
   return {
     teams,
-    stickers: [...teamStickers, ...specialStickers],
+    stickers: buildTeamStickers(),
   }
 }

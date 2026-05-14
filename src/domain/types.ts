@@ -13,6 +13,7 @@ export type TeamGroup =
   | 'J'
   | 'K'
   | 'L'
+  | 'SPECIAL'
 
 export type Team = {
   id: string
