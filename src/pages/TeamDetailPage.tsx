@@ -8,7 +8,7 @@ import { fromStickerCopies, toStickerCopies } from '../domain/progress'
 import type { Sticker } from '../domain/types'
 import { useInitializeSeed } from '../features/stickers/hooks'
 
-function parseStickerList(input: string, maxSticker: number): number[] {
+function parseStickerList(input: string, maxSticker: number, minSticker = 1): number[] {
   const selected = new Set<number>()
   for (const token of input.split(',')) {
     const trimmed = token.trim()
@@ -18,12 +18,12 @@ function parseStickerList(input: string, maxSticker: number): number[] {
       const a = Number(rangeMatch[1])
       const b = Number(rangeMatch[2])
       for (let v = Math.min(a, b); v <= Math.max(a, b); v++) {
-        if (v >= 1 && v <= maxSticker) selected.add(v)
+        if (v >= minSticker && v <= maxSticker) selected.add(v)
       }
       continue
     }
     const n = Number(trimmed)
-    if (Number.isInteger(n) && n >= 1 && n <= maxSticker) selected.add(n)
+    if (Number.isInteger(n) && n >= minSticker && n <= maxSticker) selected.add(n)
   }
   return Array.from(selected).sort((a, b) => a - b)
 }
@@ -74,7 +74,7 @@ export function TeamDetailPage() {
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<FilterMode>('all')
   const [bulkOpen, setBulkOpen] = useState(false)
-  const [bulkInput, setBulkInput] = useState('1-5, 9')
+  const [bulkInput, setBulkInput] = useState('')
   const [bulkMode, setBulkMode] = useState<BulkMode>('got')
   const [isBulkApplying, setIsBulkApplying] = useState(false)
 
@@ -90,7 +90,11 @@ export function TeamDetailPage() {
       const team = teams.find((item) => item.id === teamId) ?? null
       const teamStickers = stickers
         .filter((s) => s.teamId === teamId)
-        .sort((a, b) => a.number.localeCompare(b.number))
+        .sort((a, b) => {
+          const slotA = Number(a.number.split('-').at(-1))
+          const slotB = Number(b.number.split('-').at(-1))
+          return slotA - slotB
+        })
       return {
         team,
         stickers: teamStickers,
@@ -112,10 +116,13 @@ export function TeamDetailPage() {
     },
   })
 
+  const isZeroBased = data?.team?.group === 'SPECIAL'
+
   const stickerSlots = useMemo(() => {
+    const zeroBased = data?.team?.group === 'SPECIAL'
     return (data?.stickers ?? []).map((sticker, index) => ({
       sticker,
-      slot: index + 1,
+      slot: zeroBased ? index : index + 1,
       copies: toStickerCopies(data?.entriesById.get(sticker.id)),
     }))
   }, [data])
@@ -141,7 +148,12 @@ export function TeamDetailPage() {
     return map
   }, [stickerSlots])
 
-  const parsedBulk = useMemo(() => parseStickerList(bulkInput, total), [bulkInput, total])
+  const bulkMax = isZeroBased ? total - 1 : total
+  const bulkMin = isZeroBased ? 0 : 1
+  const parsedBulk = useMemo(
+    () => parseStickerList(bulkInput, bulkMax, bulkMin),
+    [bulkInput, bulkMax, bulkMin],
+  )
 
   const handleStickerClick = async (sticker: Sticker, copies: number) => {
     const nextCopies = copies === 0 ? 1 : copies === 1 ? 2 : copies >= 2 ? copies + 1 : 0
@@ -271,13 +283,13 @@ export function TeamDetailPage() {
                 key={sticker.id}
                 type="button"
                 className={`sticker-cell ${cls}`}
-                aria-label={`Sticker ${String(slot).padStart(2, '0')}`}
+                aria-label={`Sticker ${String(slot)}`}
                 onClick={() => void handleStickerClick(sticker, copies)}
                 onContextMenu={(e) => { e.preventDefault(); void handleLongPress(sticker) }}
               >
-                <span className="sticker-num">#{String(slot).padStart(2, '0')}</span>
+                <span className="sticker-num">#{String(isZeroBased && slot === 0 ? '00' : slot)}</span>
                 {copies >= 2 && (
-                  <span className="sticker-dupe-count">×{copies}</span>
+                  <span className="sticker-dupe-count">x{copies}</span>
                 )}
               </button>
             )
@@ -329,13 +341,14 @@ export function TeamDetailPage() {
               <div className="mono text-xs text-mute">{team.name.toUpperCase()}</div>
             </div>
             <div className="mono text-xs text-mute" style={{ marginBottom: 10 }}>
-              ENTER RANGE OR NUMBERS — E.G. <strong>1-5, 9, 14</strong>
+              ENTER RANGE OR NUMBERS — E.G.{' '}
+              <strong>{isZeroBased ? '0-4, 9, 14' : '1-5, 9, 14'}</strong>
             </div>
             <input
               className="nb-input"
               value={bulkInput}
               onChange={(e) => setBulkInput(e.target.value)}
-              placeholder="1-5, 9, 14"
+              placeholder={isZeroBased ? '0-4, 9, 14' : '1-5, 9, 14'}
             />
 
             {/* Mode chips */}
@@ -378,7 +391,7 @@ export function TeamDetailPage() {
                       fontSize: 12, fontWeight: 800,
                     }}
                   >
-                    {String(n).padStart(2, '0')}
+                    {String(n)}
                   </div>
                 ))}
               </div>

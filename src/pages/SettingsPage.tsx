@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { AppFrame } from '../components/AppFrame'
 import { repository } from '../data/repositorySingleton'
 import { buildInitialCollection } from '../domain/seed'
-import { summarizeAlbum, toStickerCopies } from '../domain/progress'
+import { summarizeAlbum } from '../domain/progress'
+import { teams2026 } from '../domain/teams2026'
 import { useInitializeSeed } from '../features/stickers/hooks'
 
 function formatLastUpdate(updatedAt: number | null) {
@@ -39,27 +40,37 @@ export function SettingsPage() {
     },
   })
 
-  const exportJson = () => {
-    if (!data) return
+  function buildStickerRows() {
+    if (!data) return []
     const entriesById = new Map(data.entries.map((e) => [e.stickerId, e]))
-    const stickersByTeam = data.teams.reduce<Record<string, number[]>>((acc, team) => {
+    const teamOrder = new Map(teams2026.map((t, i) => [t.id, i]))
+    const sortedTeams = [...data.teams].sort(
+      (a, b) => (teamOrder.get(a.id) ?? 999) - (teamOrder.get(b.id) ?? 999),
+    )
+    const rows: { sticker_id: string; status: string; duplicateCount: number }[] = []
+
+    for (const team of sortedTeams) {
       const ts = data.stickers
         .filter((s) => s.teamId === team.id)
-        .sort((a, b) => a.number.localeCompare(b.number))
-      acc[team.id] = ts.map((s) => toStickerCopies(entriesById.get(s.id)))
-      return acc
-    }, {})
+        .sort((a, b) => Number(a.number.split('-').at(-1)) - Number(b.number.split('-').at(-1)))
+
+      for (const s of ts) {
+        const entry = entriesById.get(s.id)
+        rows.push({
+          sticker_id: s.id,
+          status: entry?.status ?? 'missing',
+          duplicateCount: entry?.duplicateCount ?? 0,
+        })
+      }
+    }
+
+    return rows
+  }
+
+  const exportJson = () => {
+    if (!data) return
     downloadFile(
-      JSON.stringify(
-        {
-          edition: 'FIFA World Cup 2026',
-          teams: data.teams.map((t) => ({ id: t.id, name: t.name, flag: t.flag, group: t.group })),
-          stickers: stickersByTeam,
-          updatedAt: data.summary.updatedAt ?? Date.now(),
-        },
-        null,
-        2,
-      ),
+      JSON.stringify(buildStickerRows(), null, 2),
       'world-cup-2026-stickers.json',
       'application/json',
     )
@@ -67,18 +78,9 @@ export function SettingsPage() {
 
   const exportCsv = () => {
     if (!data) return
-    const entriesById = new Map(data.entries.map((e) => [e.stickerId, e]))
-    const rows = ['team,group,sticker_number,copies,state']
-    for (const team of data.teams) {
-      const ts = data.stickers
-        .filter((s) => s.teamId === team.id)
-        .sort((a, b) => a.number.localeCompare(b.number))
-      for (const s of ts) {
-        const slot = Number(s.number.split('-').at(-1))
-        const copies = toStickerCopies(entriesById.get(s.id))
-        const state = copies === 0 ? 'missing' : copies === 1 ? 'collected' : 'duplicate'
-        rows.push(`${team.name},${team.group},${slot},${copies},${state}`)
-      }
+    const rows = ['sticker_id,status,duplicateCount']
+    for (const row of buildStickerRows()) {
+      rows.push(`${row.sticker_id},${row.status},${row.duplicateCount}`)
     }
     downloadFile(rows.join('\n'), 'world-cup-2026-stickers.csv', 'text/csv;charset=utf-8')
   }
