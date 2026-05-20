@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { AppFrame } from '../components/AppFrame'
 import { repository } from '../data/repositorySingleton'
 import { buildTeamProgress, summarizeAlbum } from '../domain/progress'
@@ -6,20 +7,54 @@ import type { TeamGroup } from '../domain/types'
 import { useInitializeSeed } from '../features/stickers/hooks'
 
 const GROUPS: TeamGroup[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+const GROUP_COLORS = ['#FFD43A', '#8FE0B5', '#FFB7C7', '#4FB3FF']
 
-function formatLastUpdate(updatedAt: number | null) {
-  if (!updatedAt) {
-    return 'No sticker updates yet.'
-  }
-
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(updatedAt))
+function ProgressRing({
+  pct,
+  size = 84,
+  stroke = 10,
+}: {
+  pct: number
+  size?: number
+  stroke?: number
+}) {
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  const off = c - (pct / 100) * c
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="#fff" stroke="#0B0B0F" strokeWidth="3" />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke="#E83838"
+        strokeWidth={stroke}
+        strokeLinecap="butt"
+        strokeDasharray={c}
+        strokeDashoffset={off}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+      />
+      <text
+        x="50%"
+        y="50%"
+        dy="2"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontFamily="Archivo Black"
+        fontSize={size / 3.4}
+        fill="#0B0B0F"
+      >
+        {pct}%
+      </text>
+    </svg>
+  )
 }
 
 export function DashboardPage() {
   const seedInit = useInitializeSeed()
+  const navigate = useNavigate()
 
   const { data } = useQuery({
     queryKey: ['dashboard-view'],
@@ -39,80 +74,116 @@ export function DashboardPage() {
         const collected = teamsInGroup.reduce((acc, item) => acc + item.collected, 0)
         const total = teamsInGroup.reduce((acc, item) => acc + item.total, 0)
         const progress = total === 0 ? 0 : Math.round((collected / total) * 100)
-
         return { group, collected, total, progress }
       })
 
-      return {
-        album,
-        groupProgress,
-      }
+      const closest = teamProgress
+        .filter((x) => x.missing > 0 && x.missing <= 8)
+        .sort((a, b) => a.missing - b.missing)
+        .slice(0, 3)
+
+      return { album, groupProgress, closest }
     },
   })
 
+  const album = data?.album
+  const pct = album?.completion ?? 0
+
   return (
     <AppFrame>
-      <section className="page-head">
-        <div>
-          <h1 className="page-title">World Cup 2026 Sticker Tracker</h1>
-          <p className="page-subtitle">Collection tracking summary</p>
+      {/* Header */}
+      <div style={{ padding: '18px 18px 8px' }}>
+        <div className="mono uc" style={{ fontSize: 11, opacity: 0.65, letterSpacing: '0.1em' }}>
+          WORLD CUP 2026 · ALBUM
         </div>
-        <span className="chip">Playable prototype</span>
-      </section>
+        <div
+          className="display"
+          style={{ fontSize: 36, marginTop: 4, lineHeight: 0.92 }}
+        >
+          WORLD CUP<br />STICKERS
+        </div>
+      </div>
 
-      <section className="metrics-grid" aria-label="Album metrics">
-        <article className="panel metric-card metric-card-accent">
-          <p className="metric-label">Album completion</p>
-          <p className="metric-value">{data?.album.completion ?? 0}%</p>
-        </article>
-        <article className="panel metric-card">
-          <p className="metric-label">Total stickers</p>
-          <p className="metric-value">{data?.album.total ?? 0}</p>
-        </article>
-        <article className="panel metric-card">
-          <p className="metric-label">Collected</p>
-          <p className="metric-value">{data?.album.collected ?? 0}</p>
-        </article>
-        <article className="panel metric-card">
-          <p className="metric-label">Missing</p>
-          <p className="metric-value">{data?.album.missing ?? 0}</p>
-        </article>
-        <article className="panel metric-card">
-          <p className="metric-label">Duplicate copies</p>
-          <p className="metric-value">{data?.album.duplicateCopies ?? 0}</p>
-        </article>
-      </section>
+      {/* Progress hero card */}
+      <div style={{ padding: '8px 18px' }}>
+        <div className="nb-card nb-card--yellow" style={{ padding: 18 }}>
+          <div className="row items-center between" style={{ marginBottom: 12, gap: 16 }}>
+            <div>
+              <div className="mono uc text-xs" style={{ opacity: 0.7 }}>Album completion</div>
+              <div className="display" style={{ fontSize: 52, marginTop: 2 }}>{pct}%</div>
+            </div>
+            <ProgressRing pct={pct} />
+          </div>
+          <div className="nb-progress" style={{ marginBottom: 12 }}>
+            <span
+              className="nb-progress-fill"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <div className="row gap-2 wrap">
+            <span className="nb-tag">{album?.collected ?? 0} got</span>
+            <span className="nb-tag nb-tag--white">{album?.missing ?? 0} missing</span>
+            <span className="nb-tag nb-tag--red">{album?.duplicateCopies ?? 0} dupes</span>
+          </div>
+        </div>
+      </div>
 
-      <section className="dashboard-columns">
-        <article className="panel">
-          <h2 className="panel-title">Group progress map</h2>
-          <div className="group-list">
-            {(data?.groupProgress ?? []).map((item) => (
-              <div key={item.group} className="group-row">
-                <div className="group-row-head">
-                  <p>Group {item.group}</p>
-                  <p>
-                    {item.collected}/{item.total}
-                  </p>
-                </div>
-                <div className="progress-track" aria-hidden="true">
-                  <span className="progress-fill" style={{ width: `${item.progress}%` }} />
+      {/* Closest to done */}
+      {(data?.closest?.length ?? 0) > 0 && (
+        <>
+          <div className="section-head">
+            <h2 className="section-title">CLOSEST TO DONE</h2>
+            <span className="mono text-xs text-mute">Top 3</span>
+          </div>
+          <div style={{ padding: '0 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {data!.closest.map(({ team, missing, collected, total }) => (
+              <div
+                key={team.id}
+                className="nb-card nb-card--white"
+                style={{ padding: '12px 14px', cursor: 'pointer' }}
+                onClick={() => navigate(`/teams/${team.id}`)}
+              >
+                <div className="row items-center gap-3">
+                  <div
+                    className="flag-box"
+                    style={{ width: 42, height: 42, borderRadius: 10 }}
+                  >
+                    <img src={team.flag} alt={team.name} />
+                  </div>
+                  <div className="flex-1">
+                    <div style={{ fontWeight: 800, fontSize: 15 }}>{team.name}</div>
+                    <div className="mono text-xs text-mute">
+                      {collected}/{total} · GROUP {team.group}
+                    </div>
+                  </div>
+                  <span className="nb-tag nb-tag--red">{missing} LEFT</span>
                 </div>
               </div>
             ))}
           </div>
-        </article>
+        </>
+      )}
 
-        <article className="panel">
-          <h2 className="panel-title">Session status</h2>
-          <p className="meta-line">
-            Last update: <strong>{formatLastUpdate(data?.album.updatedAt ?? null)}</strong>
-          </p>
-          <p className="meta-tip">
-            Tip: use bulk input formats like <code>1-5, 9, 14</code> on team pages.
-          </p>
-        </article>
-      </section>
+      {/* Group grid */}
+      <div className="section-head">
+        <h2 className="section-title">GROUPS</h2>
+      </div>
+      <div style={{ padding: '0 18px' }}>
+        <div className="group-grid">
+          {(data?.groupProgress ?? []).map((item, i) => (
+            <div
+              key={item.group}
+              className="group-cell"
+              style={{ background: GROUP_COLORS[i % 4] }}
+            >
+              <div className="display" style={{ fontSize: 20 }}>{item.group}</div>
+              <div className="mono" style={{ fontSize: 11, marginTop: 2 }}>{item.progress}%</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ height: 20 }} />
     </AppFrame>
   )
 }

@@ -1,56 +1,81 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { AppFrame } from '../components/AppFrame'
 import { repository } from '../data/repositorySingleton'
 import { fromStickerCopies, toStickerCopies } from '../domain/progress'
 import type { Sticker } from '../domain/types'
 import { useInitializeSeed } from '../features/stickers/hooks'
 
-function parseStickerList(input: string, maxSticker: number) {
+function parseStickerList(input: string, maxSticker: number): number[] {
   const selected = new Set<number>()
-
   for (const token of input.split(',')) {
     const trimmed = token.trim()
-
-    if (!trimmed) {
-      continue
-    }
-
+    if (!trimmed) continue
     const rangeMatch = trimmed.match(/^(\d+)\s*-\s*(\d+)$/)
     if (rangeMatch) {
-      const start = Number(rangeMatch[1])
-      const end = Number(rangeMatch[2])
-      const min = Math.min(start, end)
-      const max = Math.max(start, end)
-
-      for (let value = min; value <= max; value += 1) {
-        if (value >= 1 && value <= maxSticker) {
-          selected.add(value)
-        }
+      const a = Number(rangeMatch[1])
+      const b = Number(rangeMatch[2])
+      for (let v = Math.min(a, b); v <= Math.max(a, b); v++) {
+        if (v >= 1 && v <= maxSticker) selected.add(v)
       }
       continue
     }
-
-    const single = Number(trimmed)
-    if (Number.isInteger(single) && single >= 1 && single <= maxSticker) {
-      selected.add(single)
-    }
+    const n = Number(trimmed)
+    if (Number.isInteger(n) && n >= 1 && n <= maxSticker) selected.add(n)
   }
-
-  return Array.from(selected).sort((left, right) => left - right)
+  return Array.from(selected).sort((a, b) => a - b)
 }
 
-function formatSlot(slot: number) {
-  return slot.toString().padStart(2, '0')
+function ProgressRing({
+  pct,
+  size = 70,
+  stroke = 9,
+}: {
+  pct: number
+  size?: number
+  stroke?: number
+}) {
+  const r = (size - stroke) / 2
+  const c = 2 * Math.PI * r
+  const off = c - (pct / 100) * c
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="#fff" stroke="#0B0B0F" strokeWidth="3" />
+      <circle
+        cx={size / 2} cy={size / 2} r={r} fill="none"
+        stroke="#E83838" strokeWidth={stroke} strokeLinecap="butt"
+        strokeDasharray={c} strokeDashoffset={off}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+      />
+      <text
+        x="50%" y="50%" dy="2" textAnchor="middle" dominantBaseline="middle"
+        fontFamily="Archivo Black" fontSize={size / 3.4} fill="#0B0B0F"
+      >
+        {pct}%
+      </text>
+    </svg>
+  )
 }
+
+type FilterMode = 'all' | 'missing' | 'got' | 'dupes'
+type BulkMode = 'got' | 'dupe' | 'clear'
+
+const BULK_MODE_OPTS: { id: BulkMode; label: string; bg: string }[] = [
+  { id: 'got',   label: 'Mark Got',  bg: '#8FE0B5' },
+  { id: 'dupe',  label: 'Add Dupe',  bg: '#FFD43A' },
+  { id: 'clear', label: 'Clear',     bg: '#FFB7C7' },
+]
 
 export function TeamDetailPage() {
   const seedInit = useInitializeSeed()
   const { teamId } = useParams()
   const queryClient = useQueryClient()
-  const [bulkInput, setBulkInput] = useState('')
-  const [selectedStickerIds, setSelectedStickerIds] = useState<Set<string>>(new Set())
+  const [filter, setFilter] = useState<FilterMode>('all')
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkInput, setBulkInput] = useState('1-5, 9')
+  const [bulkMode, setBulkMode] = useState<BulkMode>('got')
   const [isBulkApplying, setIsBulkApplying] = useState(false)
 
   const { data, isLoading } = useQuery({
@@ -62,24 +87,21 @@ export function TeamDetailPage() {
         repository.listStickers(),
         repository.listEntries(),
       ])
-
       const team = teams.find((item) => item.id === teamId) ?? null
       const teamStickers = stickers
-        .filter((sticker) => sticker.teamId === teamId)
-        .sort((left, right) => left.number.localeCompare(right.number))
-
+        .filter((s) => s.teamId === teamId)
+        .sort((a, b) => a.number.localeCompare(b.number))
       return {
         team,
         stickers: teamStickers,
-        entriesById: new Map(entries.map((entry) => [entry.stickerId, entry])),
+        entriesById: new Map(entries.map((e) => [e.stickerId, e])),
       }
     },
   })
 
   const mutation = useMutation({
     mutationFn: async ({ stickerId, copies }: { stickerId: string; copies: number }) => {
-      const patch = fromStickerCopies(copies)
-      return repository.updateSticker(stickerId, patch)
+      return repository.updateSticker(stickerId, fromStickerCopies(copies))
     },
     onSuccess: async () => {
       await Promise.all([
@@ -91,227 +113,298 @@ export function TeamDetailPage() {
   })
 
   const stickerSlots = useMemo(() => {
-    const stickers = data?.stickers ?? []
-    return stickers.map((sticker, index) => ({
+    return (data?.stickers ?? []).map((sticker, index) => ({
       sticker,
       slot: index + 1,
+      copies: toStickerCopies(data?.entriesById.get(sticker.id)),
     }))
-  }, [data?.stickers])
+  }, [data])
 
   const total = stickerSlots.length
-  const collected = stickerSlots.reduce((acc, item) => {
-    return acc + (toStickerCopies(data?.entriesById.get(item.sticker.id)) > 0 ? 1 : 0)
-  }, 0)
+  const collected = stickerSlots.filter((s) => s.copies > 0).length
   const missing = total - collected
-  const duplicateCopies = stickerSlots.reduce((acc, item) => {
-    const copies = toStickerCopies(data?.entriesById.get(item.sticker.id))
-    return acc + Math.max(0, copies - 1)
-  }, 0)
+  const dupeCount = stickerSlots.filter((s) => s.copies >= 2).length
+  const progress = total === 0 ? 0 : Math.round((collected / total) * 100)
+
+  const filteredSlots = useMemo(() => {
+    return stickerSlots.filter((s) => {
+      if (filter === 'missing') return s.copies === 0
+      if (filter === 'got')    return s.copies === 1
+      if (filter === 'dupes')  return s.copies >= 2
+      return true
+    })
+  }, [stickerSlots, filter])
 
   const numberToStickerId = useMemo(() => {
     const map = new Map<number, string>()
-
-    for (const item of stickerSlots) {
-      map.set(item.slot, item.sticker.id)
-    }
-
+    for (const item of stickerSlots) map.set(item.slot, item.sticker.id)
     return map
   }, [stickerSlots])
 
-  const applyBulkAction = async (action: 'collected' | 'duplicate' | 'clear') => {
-    const selectedIds = Array.from(selectedStickerIds)
-    const parsedNumbers = parseStickerList(bulkInput, total)
-    const parsedIds = parsedNumbers
-      .map((number) => numberToStickerId.get(number))
-      .filter((value): value is string => Boolean(value))
+  const parsedBulk = useMemo(() => parseStickerList(bulkInput, total), [bulkInput, total])
 
-    const targets = selectedIds.length > 0 ? selectedIds : parsedIds
+  const handleStickerClick = async (sticker: Sticker, copies: number) => {
+    const nextCopies = copies === 0 ? 1 : copies === 1 ? 2 : copies >= 2 ? copies + 1 : 0
+    const capped = nextCopies > 4 ? 0 : nextCopies
+    await mutation.mutateAsync({ stickerId: sticker.id, copies: capped })
+  }
 
-    if (targets.length === 0) {
-      return
-    }
+  const handleLongPress = async (sticker: Sticker) => {
+    await mutation.mutateAsync({ stickerId: sticker.id, copies: 0 })
+  }
 
+  const applyBulk = async () => {
+    if (parsedBulk.length === 0) return
     try {
       setIsBulkApplying(true)
       await Promise.all(
-        targets.map(async (stickerId) => {
+        parsedBulk.map(async (n) => {
+          const stickerId = numberToStickerId.get(n)
+          if (!stickerId) return
           const currentCopies = toStickerCopies(data?.entriesById.get(stickerId))
           const nextCopies =
-            action === 'collected'
-              ? Math.max(currentCopies, 1)
-              : action === 'duplicate'
-                ? Math.max(currentCopies, 2)
-                : 0
-
-          const patch = fromStickerCopies(nextCopies)
-          await repository.updateSticker(stickerId, patch)
+            bulkMode === 'got'   ? Math.max(currentCopies, 1) :
+            bulkMode === 'dupe'  ? Math.max(currentCopies >= 2 ? currentCopies + 1 : 2, 2) :
+                                   0
+          await repository.updateSticker(stickerId, fromStickerCopies(nextCopies))
         }),
       )
-
-      setSelectedStickerIds(new Set())
-
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['team-detail', teamId] }),
         queryClient.invalidateQueries({ queryKey: ['teams-overview'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard-view'] }),
       ])
+      setBulkOpen(false)
     } finally {
       setIsBulkApplying(false)
     }
   }
 
-  const runSelectList = () => {
-    const parsedNumbers = parseStickerList(bulkInput, total)
-    const next = new Set<string>()
-
-    for (const number of parsedNumbers) {
-      const stickerId = numberToStickerId.get(number)
-      if (stickerId) {
-        next.add(stickerId)
-      }
-    }
-
-    setSelectedStickerIds(next)
+  if (isLoading) {
+    return (
+      <AppFrame>
+        <div className="sticky-bar"><h1>Loading...</h1></div>
+      </AppFrame>
+    )
   }
 
-  const toggleSelection = (stickerId: string) => {
-    setSelectedStickerIds((previous) => {
-      const next = new Set(previous)
-      if (next.has(stickerId)) {
-        next.delete(stickerId)
-      } else {
-        next.add(stickerId)
-      }
-      return next
-    })
+  if (!data?.team) {
+    return (
+      <AppFrame>
+        <div className="sticky-bar">
+          <Link className="back-btn" to="/teams">←</Link>
+          <h1>Not found</h1>
+        </div>
+      </AppFrame>
+    )
   }
 
-  const handleStickerClick = async (sticker: Sticker) => {
-    if (selectedStickerIds.size > 0) {
-      toggleSelection(sticker.id)
-      return
-    }
-
-    const currentCopies = toStickerCopies(data?.entriesById.get(sticker.id))
-    const nextCopies = currentCopies === 0 ? 1 : currentCopies === 1 ? 2 : 0
-    await mutation.mutateAsync({ stickerId: sticker.id, copies: nextCopies })
+  const { team } = data
+  const filterCounts = {
+    all:     total,
+    missing: missing,
+    got:     stickerSlots.filter((s) => s.copies === 1).length,
+    dupes:   dupeCount,
   }
+
+  const filterOpts: { id: FilterMode; label: string }[] = [
+    { id: 'all',     label: 'All' },
+    { id: 'missing', label: 'Missing' },
+    { id: 'got',     label: 'Got' },
+    { id: 'dupes',   label: 'Doubles' },
+  ]
 
   return (
     <AppFrame>
-      {isLoading ? <p className="meta-line">Loading team details...</p> : null}
+      {/* Top bar */}
+      <div className="sticky-bar">
+        <Link className="back-btn" to="/teams">←</Link>
+        <h1 className="flex-1">{team.name.toUpperCase()}</h1>
+        <span className="nb-tag nb-tag--pink">GRP {team.group}</span>
+      </div>
 
-      {!isLoading && !data?.team ? (
-        <p className="panel empty-state">Team not found. Check your team link and try again.</p>
-      ) : null}
-
-      {data?.team ? (
-        <>
-          <section className="page-head team-head">
-            <div>
-              <Link className="chip back-chip" to="/teams">
-                ← Back to Teams
-              </Link>
-              <div className="team-hero">
-                <img
-                  className="team-hero-flag"
-                  src={data.team.flag}
-                  alt={`${data.team.name} flag`}
-                />
-                <div>
-                  <h1 className="page-title">{data.team.name}</h1>
-                  <p className="page-subtitle">
-                    Group {data.team.group} · {total} stickers
-                  </p>
-                </div>
+      {/* Hero card */}
+      <div style={{ padding: '14px 18px 4px' }}>
+        <div className="nb-card nb-card--yellow" style={{ padding: '16px 18px' }}>
+          <div className="row items-center gap-3">
+            <div className="flag-box" style={{ width: 72, height: 72, borderRadius: 14, boxShadow: '3px 3px 0 #0B0B0F' }}>
+              <img src={team.flag} alt={`${team.name} flag`} />
+            </div>
+            <div className="flex-1">
+              <div className="mono uc text-xs text-mute" style={{ marginBottom: 2 }}>{team.id.toUpperCase()}</div>
+              <div className="display" style={{ fontSize: 28 }}>
+                {collected}
+                <span style={{ opacity: 0.4 }}>/{total}</span>
               </div>
+              <div className="mono text-xs text-mute">STICKERS</div>
             </div>
-          </section>
+            <ProgressRing pct={progress} />
+          </div>
+        </div>
+      </div>
 
-          <section className="panel bulk-panel">
-            <p className="meta-tip">
-              Bulk update format: <code>1-5, 9, 14</code>
-            </p>
-            <div className="bulk-controls">
-              <input
-                className="field-input"
-                aria-label="Bulk sticker list"
-                placeholder="1-5, 9, 14"
-                value={bulkInput}
-                onChange={(event) => setBulkInput(event.target.value)}
-              />
-              <button type="button" className="btn" onClick={runSelectList}>
-                Select list
-              </button>
+      {/* Filter chips */}
+      <div className="filter-strip">
+        {filterOpts.map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            className={`nb-chip${filter === opt.id ? ' is-active' : ''}`}
+            onClick={() => setFilter(opt.id)}
+          >
+            {opt.label}
+            <span className="chip-count">{filterCounts[opt.id]}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Sticker grid */}
+      <div style={{ padding: '12px 18px 4px' }}>
+        <div className="sticker-grid">
+          {filteredSlots.map(({ sticker, slot, copies }) => {
+            const cls =
+              copies === 0 ? 'sticker-cell--missing' :
+              copies === 1 ? 'sticker-cell--got' :
+                             'sticker-cell--dupe'
+            return (
               <button
+                key={sticker.id}
                 type="button"
-                className="btn btn-primary"
-                onClick={() => applyBulkAction('collected')}
-                disabled={isBulkApplying}
+                className={`sticker-cell ${cls}`}
+                aria-label={`Sticker ${String(slot).padStart(2, '0')}`}
+                onClick={() => void handleStickerClick(sticker, copies)}
+                onContextMenu={(e) => { e.preventDefault(); void handleLongPress(sticker) }}
               >
-                Mark collected
+                <span className="sticker-num">#{String(slot).padStart(2, '0')}</span>
+                {copies >= 2 && (
+                  <span className="sticker-dupe-count">×{copies}</span>
+                )}
               </button>
-              <button
-                type="button"
-                className="btn"
-                onClick={() => applyBulkAction('duplicate')}
-                disabled={isBulkApplying}
-              >
-                Mark duplicate
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={() => applyBulkAction('clear')}
-                disabled={isBulkApplying}
-              >
-                Clear
-              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div style={{ padding: '14px 18px 20px' }}>
+        <div className="legend">
+          <div className="legend-item">
+            <span className="legend-swatch" style={{ background: '#8FE0B5' }} />
+            Got it
+          </div>
+          <div className="legend-item">
+            <span className="legend-swatch" style={{ background: '#FFD43A' }} />
+            Dupe
+          </div>
+          <div className="legend-item">
+            <span className="legend-swatch" style={{ background: '#F1E6C7' }} />
+            Missing
+          </div>
+          <div className="mono text-xs text-mute" style={{ width: '100%' }}>
+            Tap → got · tap again → +dupe · right-click → clear
+          </div>
+        </div>
+      </div>
+
+      {/* FAB */}
+      <button
+        type="button"
+        className="nb-fab"
+        aria-label="Bulk add"
+        onClick={() => setBulkOpen(true)}
+      >
+        +
+      </button>
+
+      {/* Bulk add sheet */}
+      {bulkOpen && (
+        <div
+          className="sheet-overlay"
+          onClick={() => setBulkOpen(false)}
+        >
+          <div className="nb-sheet" onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
+            <div className="sheet-grip" />
+            <div className="row between items-center" style={{ marginBottom: 8 }}>
+              <div className="display" style={{ fontSize: 22 }}>BULK ADD</div>
+              <div className="mono text-xs text-mute">{team.name.toUpperCase()}</div>
             </div>
-          </section>
+            <div className="mono text-xs text-mute" style={{ marginBottom: 10 }}>
+              ENTER RANGE OR NUMBERS — E.G. <strong>1-5, 9, 14</strong>
+            </div>
+            <input
+              className="nb-input"
+              value={bulkInput}
+              onChange={(e) => setBulkInput(e.target.value)}
+              placeholder="1-5, 9, 14"
+            />
 
-          <section className="panel sticker-panel">
-            <p className="stats-pill">
-              {collected}/{total} collected · {missing} missing · {duplicateCopies} dupes
-            </p>
+            {/* Mode chips */}
+            <div className="row gap-2 wrap" style={{ marginTop: 10 }}>
+              {BULK_MODE_OPTS.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={`nb-chip${bulkMode === m.id ? ' is-active' : ''}`}
+                  style={bulkMode !== m.id ? { background: m.bg } : undefined}
+                  onClick={() => setBulkMode(m.id)}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
 
-            <div className="sticker-grid">
-              {stickerSlots.map(({ sticker, slot }) => {
-                const copies = toStickerCopies(data.entriesById.get(sticker.id))
-                const isSelected = selectedStickerIds.has(sticker.id)
-                const stateClass =
-                  copies === 0
-                    ? 'is-missing'
-                    : copies === 1
-                      ? 'is-collected'
-                      : 'is-duplicate'
-
-                const stateLabel =
-                  copies === 0 ? 'Missing' : copies === 1 ? 'Collected' : `Dupes x${copies}`
-
-                return (
-                  <button
-                    key={sticker.id}
-                    type="button"
-                    className={`sticker-cell ${stateClass} ${isSelected ? 'is-selected' : ''}`}
-                    aria-label={`Sticker ${formatSlot(slot)}`}
-                    onClick={() => {
-                      void handleStickerClick(sticker)
-                    }}
-                    onContextMenu={(event) => {
-                      event.preventDefault()
-                      toggleSelection(sticker.id)
+            {/* Preview */}
+            <div style={{ marginTop: 14 }}>
+              <div className="mono uc text-xs text-mute" style={{ marginBottom: 6 }}>
+                PREVIEW · {parsedBulk.length} STICKERS
+              </div>
+              <div className="row wrap gap-2">
+                {parsedBulk.length === 0 && (
+                  <div className="mono text-xs text-mute">None selected</div>
+                )}
+                {parsedBulk.map((n) => (
+                  <div
+                    key={n}
+                    className="mono"
+                    style={{
+                      width: 34, height: 34,
+                      border: '2px solid #0B0B0F',
+                      borderRadius: 6,
+                      background:
+                        bulkMode === 'got'  ? '#8FE0B5' :
+                        bulkMode === 'dupe' ? '#FFD43A' :
+                                              '#FFB7C7',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, fontWeight: 800,
                     }}
                   >
-                    <span className="sticker-number">#{formatSlot(slot)}</span>
-                    <span className="sticker-state">{stateLabel}</span>
-                  </button>
-                )
-              })}
+                    {String(n).padStart(2, '0')}
+                  </div>
+                ))}
+              </div>
             </div>
-          </section>
-        </>
-      ) : null}
+
+            {/* Actions */}
+            <div className="row gap-2" style={{ marginTop: 18 }}>
+              <button
+                type="button"
+                className="nb-btn flex-1"
+                onClick={() => setBulkOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="nb-btn nb-btn--primary flex-1"
+                disabled={isBulkApplying || parsedBulk.length === 0}
+                onClick={() => void applyBulk()}
+              >
+                Apply ({parsedBulk.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppFrame>
   )
 }

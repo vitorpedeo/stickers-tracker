@@ -24,14 +24,12 @@ export function TeamsPage() {
         repository.listStickers(),
         repository.listEntries(),
       ])
-
       return buildTeamProgress(teams, stickers, entries)
     },
   })
 
   const filteredTeams = useMemo(() => {
     const needle = search.trim().toLowerCase()
-
     return (data ?? [])
       .filter((item) => {
         const matchesName = item.team.name.toLowerCase().includes(needle)
@@ -42,86 +40,95 @@ export function TeamsPage() {
         if (left.team.group !== right.team.group) {
           return left.team.group.localeCompare(right.team.group)
         }
-
         if (left.team.order !== right.team.order) {
           return left.team.order - right.team.order
         }
-
         return left.team.name.localeCompare(right.team.name)
       })
   }, [data, group, search])
 
   return (
     <AppFrame>
-      <section className="page-head">
-        <div>
-          <h1 className="page-title">Teams</h1>
-          <p className="page-subtitle">Search teams or narrow by group to open sticker sheets.</p>
-        </div>
-        <span className="chip">{data?.length ?? 0} teams</span>
-      </section>
+      {/* Top bar */}
+      <div className="sticky-bar">
+        <h1 style={{ flex: 1 }}>TEAMS</h1>
+        <span className="nb-tag">{filteredTeams.length}/{data?.length ?? 0}</span>
+      </div>
 
-      <section className="panel filters-panel">
-        <label className="field-label" htmlFor="team-search">
-          Search
-        </label>
+      {/* Search */}
+      <div style={{ padding: '14px 18px 8px' }}>
         <input
-          id="team-search"
-          className="field-input"
-          placeholder="Search by team name"
+          className="nb-input"
+          placeholder="Search team..."
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
         />
+      </div>
 
-        <label className="field-label" htmlFor="group-filter">
-          Group
-        </label>
-        <select
-          id="group-filter"
-          className="field-select"
-          value={group}
-          onChange={(event) => setGroup(event.target.value as GroupFilter)}
-        >
-          {GROUP_OPTIONS.map((value) => (
-            <option key={value} value={value}>
-              {value === 'all' ? 'All groups' : `Group ${value}`}
-            </option>
-          ))}
-        </select>
-      </section>
+      {/* Group chips */}
+      <div className="filter-strip">
+        {GROUP_OPTIONS.map((g) => (
+          <button
+            key={g}
+            type="button"
+            className={`nb-chip${group === g ? ' is-active' : ''}`}
+            onClick={() => setGroup(g)}
+          >
+            {g === 'all' ? 'All groups' : `Group ${g}`}
+          </button>
+        ))}
+      </div>
 
-      {isLoading ? <p className="meta-line">Loading teams...</p> : null}
+      {/* Team list */}
+      <div style={{ padding: '12px 18px 8px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {isLoading && (
+          <div className="mono text-sm text-mute" style={{ padding: '20px 0', textAlign: 'center' }}>
+            Loading...
+          </div>
+        )}
 
-      <section className="team-list" aria-label="Teams list">
-        {filteredTeams.map((item) => (
-          <Link key={item.team.id} className="panel team-row" to={`/teams/${item.team.id}`}>
-            <div className="team-row-identity">
-              <img className="team-flag" src={item.team.flag} alt={`${item.team.name} flag`} />
-              <div>
-                <h2>{item.team.name}</h2>
-                <p>Group {item.team.group}</p>
+        {!isLoading && filteredTeams.length === 0 && (
+          <div
+            className="nb-card nb-card--white mono text-sm text-mute"
+            style={{ padding: 18, textAlign: 'center' }}
+          >
+            No teams match this filter.
+          </div>
+        )}
+
+        {filteredTeams.map(({ team, total, collected, missing, duplicateCopies, progress }) => (
+          <Link
+            key={team.id}
+            to={`/teams/${team.id}`}
+            className="nb-card nb-card--white"
+            style={{ padding: 14, display: 'block' }}
+          >
+            <div className="row items-center gap-3">
+              <div className="flag-box" style={{ width: 48, height: 48 }}>
+                <img src={team.flag} alt={`${team.name} flag`} />
               </div>
+              <div className="flex-1">
+                <div className="row items-center gap-2" style={{ marginBottom: 2 }}>
+                  <div style={{ fontWeight: 800, fontSize: 16 }}>{team.name}</div>
+                  <div className="mono text-xs text-mute">GRP {team.group}</div>
+                </div>
+                <div className="mono text-xs text-mute">
+                  {collected}/{total} · {missing} missing · {duplicateCopies} dupes
+                </div>
+              </div>
+              <div className="display" style={{ fontSize: 22, flexShrink: 0 }}>{progress}%</div>
             </div>
-
-            <div className="team-row-metrics">
-              <p>
-                {item.collected}/{item.total} collected
-              </p>
-              <p>
-                {item.missing} missing · {item.duplicateCopies} dupes
-              </p>
-            </div>
-
-            <div className="progress-track" aria-hidden="true">
-              <span className="progress-fill" style={{ width: `${item.progress}%` }} />
+            <div className="nb-progress" style={{ marginTop: 10 }}>
+              <span
+                className={`nb-progress-fill${progress === 100 ? ' nb-progress-fill--complete' : ''}`}
+                style={{ width: `${progress}%` }}
+              />
             </div>
           </Link>
         ))}
+      </div>
 
-        {!isLoading && filteredTeams.length === 0 ? (
-          <p className="panel empty-state">No teams match this filter.</p>
-        ) : null}
-      </section>
+      <div style={{ height: 12 }} />
     </AppFrame>
   )
 }

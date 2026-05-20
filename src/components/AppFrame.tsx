@@ -6,17 +6,18 @@ type AppFrameProps = {
 }
 
 const navItems = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/teams', label: 'Teams' },
-  { to: '/settings', label: 'Settings' },
+  { to: '/',        label: 'Home',    ico: '■', end: true  },
+  { to: '/teams',   label: 'Teams',   ico: '☰', end: false },
+  { to: '/trade',   label: 'Doubles', ico: '⇆', end: false },
+  { to: '/settings',label: 'Settings',ico: '⚙', end: false },
 ]
 
 export function AppFrame({ children }: AppFrameProps) {
   return (
     <div className="app-shell">
-      <div className="bg-glow bg-glow-a" aria-hidden="true" />
-      <div className="bg-glow bg-glow-b" aria-hidden="true" />
-      <main className="app-main">{children}</main>
+      <div className="app-main">
+        <div className="page-scroll">{children}</div>
+      </div>
       <nav className="bottom-nav" aria-label="Primary">
         {navItems.map((item) => (
           <NavLink
@@ -24,10 +25,11 @@ export function AppFrame({ children }: AppFrameProps) {
             to={item.to}
             end={item.end}
             className={({ isActive }) =>
-              isActive ? 'bottom-nav-link is-active' : 'bottom-nav-link'
+              isActive ? 'nav-tab is-active' : 'nav-tab'
             }
           >
-            {item.label}
+            <span className="nav-tab-ico">{item.ico}</span>
+            <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>

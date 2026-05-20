@@ -1,33 +1,23 @@
 :root {
-  --bg: oklch(98% 0.004 240);
-  --surface: oklch(100% 0 0);
-  --fg: oklch(20% 0.02 240);
-  --muted: oklch(50% 0.018 240);
-  --border: oklch(90% 0.006 240);
-  --accent: oklch(62% 0.14 155);
-  --accent-strong: oklch(56% 0.16 155);
-  --accent-soft: oklch(94% 0.06 155);
-  --danger: oklch(58% 0.18 24);
-  --warn: oklch(72% 0.15 90);
-
-  --font-display: 'Sohne', 'Sohne Buch', 'Avenir Next', -apple-system, BlinkMacSystemFont,
-    system-ui, sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
-
-  --radius-xs: 10px;
-  --radius-sm: 14px;
-  --radius-md: 18px;
-  --radius-lg: 26px;
-
-  --space-2: clamp(0.45rem, 0.5vw, 0.55rem);
-  --space-3: clamp(0.62rem, 0.8vw, 0.78rem);
-  --space-4: clamp(0.85rem, 1vw, 1rem);
-  --space-5: clamp(1rem, 1.15vw, 1.25rem);
-  --space-6: clamp(1.2rem, 1.45vw, 1.6rem);
-  --space-8: clamp(1.6rem, 2vw, 2.2rem);
-
-  --shadow-sm: 0 8px 16px color-mix(in oklab, var(--fg) 8%, transparent);
-  --shadow-md:
-    0 20px 35px -18px color-mix(in oklab, var(--fg) 25%, transparent),
-    0 12px 22px -16px rgb(0 0 0 / 0.15);
+  --bg-canvas: #4ED68A;
+  --bg-cream: #F8F1DE;
+  --bg-cream-deep: #F1E6C7;
+  --bg-yellow: #FFD43A;
+  --bg-yellow-soft: #FFEBA8;
+  --bg-red: #E83838;
+  --bg-red-deep: #C92626;
+  --bg-pink: #FFB7C7;
+  --bg-blue: #4FB3FF;
+  --bg-mint: #8FE0B5;
+  --ink: #0B0B0F;
+  --ink-soft: #2A2A33;
+  --ink-mute: #6B6B72;
+  --shadow: 6px 6px 0 var(--ink);
+  --shadow-sm: 3px 3px 0 var(--ink);
+  --shadow-lg: 10px 10px 0 var(--ink);
+  --border: 3px solid var(--ink);
+  --border-thin: 2px solid var(--ink);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-lg: 22px;
 }

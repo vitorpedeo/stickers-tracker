@@ -12,9 +12,10 @@ body,
 
 body {
   margin: 0;
-  color: var(--fg);
-  background: var(--bg);
-  font-family: var(--font-body);
+  background: var(--bg-cream);
+  color: var(--ink);
+  font-family: 'Space Grotesk', 'Helvetica Neue', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -24,6 +25,7 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
