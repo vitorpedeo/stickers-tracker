@@ -13,6 +13,7 @@ type Repository = {
   getSeedVersion: () => Promise<string | undefined>
   getEntry: (stickerId: string) => Promise<CollectionEntry | undefined>
   updateSticker: (stickerId: string, patch: StickerPatch) => Promise<CollectionEntry>
+  importEntries: (entries: CollectionEntry[]) => Promise<void>
   listTeams: () => Promise<SeedBundle['teams']>
   listStickers: () => Promise<SeedBundle['stickers']>
   listEntries: () => Promise<CollectionEntry[]>
@@ -94,6 +95,13 @@ export function createRepository(): Repository {
       }
 
       return needsReseed
+    },
+
+    async importEntries(entries) {
+      await db.transaction('rw', db.entries, async () => {
+        await db.entries.clear()
+        await db.entries.bulkPut(entries)
+      })
     },
 
     async updateSticker(stickerId, patch) {

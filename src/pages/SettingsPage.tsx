@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
+import { useRef, useState } from 'react'
 import { AppFrame } from '../components/AppFrame'
 import { repository } from '../data/repositorySingleton'
 import { buildInitialCollection } from '../domain/seed'
 import { summarizeAlbum } from '../domain/progress'
 import { teams2026 } from '../domain/teams2026'
 import { useInitializeSeed } from '../features/stickers/hooks'
+import type { CollectionEntry, StickerStatus } from '../domain/types'
 
 function formatLastUpdate(updatedAt: number | null) {
   if (!updatedAt) return 'Never updated'
@@ -24,8 +26,26 @@ function downloadFile(content: string, fileName: string, type: string) {
   URL.revokeObjectURL(url)
 }
 
+function parseCsvImport(text: string): Map<string, { status: StickerStatus; duplicateCount: number }> {
+  const map = new Map<string, { status: StickerStatus; duplicateCount: number }>()
+  const lines = text.trim().split('\n')
+  // skip header
+  for (let i = 1; i < lines.length; i++) {
+    const parts = lines[i].split(',')
+    if (parts.length < 3) continue
+    const sticker_id = parts[0].trim()
+    const status = parts[1].trim() as StickerStatus
+    const duplicate_count = parseInt(parts[2].trim(), 10)
+    if (!sticker_id || (status !== 'missing' && status !== 'collected')) continue
+    map.set(sticker_id, { status, duplicateCount: isNaN(duplicate_count) ? 0 : duplicate_count })
+  }
+  return map
+}
+
 export function SettingsPage() {
   const seedInit = useInitializeSeed()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isImporting, setIsImporting] = useState(false)
 
   const { data, refetch } = useQuery({
     queryKey: ['settings-view'],
@@ -47,7 +67,7 @@ export function SettingsPage() {
     const sortedTeams = [...data.teams].sort(
       (a, b) => (teamOrder.get(a.id) ?? 999) - (teamOrder.get(b.id) ?? 999),
     )
-    const rows: { sticker_id: string; status: string; duplicateCount: number }[] = []
+    const rows: { sticker_id: string; status: string; duplicate_count: number }[] = []
 
     for (const team of sortedTeams) {
       const ts = data.stickers
@@ -59,7 +79,7 @@ export function SettingsPage() {
         rows.push({
           sticker_id: s.id,
           status: entry?.status ?? 'missing',
-          duplicateCount: entry?.duplicateCount ?? 0,
+          duplicate_count: entry?.duplicateCount ?? 0,
         })
       }
     }
@@ -78,11 +98,46 @@ export function SettingsPage() {
 
   const exportCsv = () => {
     if (!data) return
-    const rows = ['sticker_id,status,duplicateCount']
+    const rows = ['sticker_id,status,duplicate_count']
     for (const row of buildStickerRows()) {
-      rows.push(`${row.sticker_id},${row.status},${row.duplicateCount}`)
+      rows.push(`${row.sticker_id},${row.status},${row.duplicate_count}`)
     }
     downloadFile(rows.join('\n'), 'world-cup-2026-stickers.csv', 'text/csv;charset=utf-8')
+  }
+
+  const handleImportClick = () => {
+    const confirmed = window.confirm(
+      'Import CSV? All your current sticker data will be overwritten with the data from the file. This cannot be undone.',
+    )
+    if (!confirmed) return
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !data) return
+    try {
+      setIsImporting(true)
+      const text = await file.text()
+      const csvMap = parseCsvImport(text)
+      const nowIso = new Date().toISOString()
+      const entries: CollectionEntry[] = data.stickers.map((s) => {
+        const row = csvMap.get(s.id)
+        return {
+          stickerId: s.id,
+          status: row?.status ?? 'missing',
+          duplicateCount: row?.duplicateCount ?? 0,
+          needNote: '',
+          updatedAt: nowIso,
+        }
+      })
+      await repository.importEntries(entries)
+      await refetch()
+    } finally {
+      setIsImporting(false)
+      // reset input so same file can be re-imported
+      e.target.value = ''
+    }
   }
 
   const resetLocalData = async () => {
@@ -128,6 +183,29 @@ export function SettingsPage() {
         </button>
         <button type="button" className="nb-btn nb-btn--block" onClick={exportCsv}>
           <span>Export as CSV</span><span className="mono">▸</span>
+        </button>
+      </div>
+
+      {/* Import */}
+      <div className="section-head" style={{ marginTop: 6 }}>
+        <h2 className="section-title">IMPORT</h2>
+      </div>
+      <div style={{ padding: '0 18px' }}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".csv"
+          style={{ display: 'none' }}
+          onChange={(e) => void handleFileChange(e)}
+        />
+        <button
+          type="button"
+          className="nb-btn nb-btn--block"
+          disabled={isImporting}
+          onClick={handleImportClick}
+        >
+          <span>{isImporting ? 'Importing…' : 'Import from CSV'}</span>
+          <span className="mono">▸</span>
         </button>
       </div>
 
