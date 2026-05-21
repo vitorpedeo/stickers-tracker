@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useParams } from 'react-router-dom'
 import { AppFrame } from '../components/AppFrame'
@@ -77,6 +77,12 @@ export function TeamDetailPage() {
   const [bulkInput, setBulkInput] = useState('')
   const [bulkMode, setBulkMode] = useState<BulkMode>('got')
   const [isBulkApplying, setIsBulkApplying] = useState(false)
+
+  const isTouchDevice = useMemo(
+    () => typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0,
+    [],
+  )
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['team-detail', teamId],
@@ -156,13 +162,25 @@ export function TeamDetailPage() {
   )
 
   const handleStickerClick = async (sticker: Sticker, copies: number) => {
-    const nextCopies = copies === 0 ? 1 : copies === 1 ? 2 : copies >= 2 ? copies + 1 : 0
-    const capped = nextCopies > 4 ? 0 : nextCopies
-    await mutation.mutateAsync({ stickerId: sticker.id, copies: capped })
+    const nextCopies = copies + 1
+    await mutation.mutateAsync({ stickerId: sticker.id, copies: nextCopies })
   }
 
   const handleLongPress = async (sticker: Sticker) => {
     await mutation.mutateAsync({ stickerId: sticker.id, copies: 0 })
+  }
+
+  const startLongPress = (sticker: Sticker) => (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.pointerType === 'mouse') return
+    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+    longPressTimer.current = setTimeout(() => { void handleLongPress(sticker) }, 500)
+  }
+
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
   }
 
   const applyBulk = async () => {
@@ -175,9 +193,8 @@ export function TeamDetailPage() {
           if (!stickerId) return
           const currentCopies = toStickerCopies(data?.entriesById.get(stickerId))
           const nextCopies =
-            bulkMode === 'got'   ? Math.max(currentCopies, 1) :
-            bulkMode === 'dupe'  ? Math.max(currentCopies >= 2 ? currentCopies + 1 : 2, 2) :
-                                   0
+            bulkMode === 'got'   ? currentCopies + 1 :
+            bulkMode === 'dupe'  ? Math.max(currentCopies, 2) + 1 : 0
           await repository.updateSticker(stickerId, fromStickerCopies(nextCopies))
         }),
       )
@@ -285,6 +302,10 @@ export function TeamDetailPage() {
                 className={`sticker-cell ${cls}`}
                 aria-label={`Sticker ${String(slot)}`}
                 onClick={() => void handleStickerClick(sticker, copies)}
+                onPointerDown={startLongPress(sticker)}
+                onPointerUp={cancelLongPress}
+                onPointerCancel={cancelLongPress}
+                onPointerMove={cancelLongPress}
                 onContextMenu={(e) => { e.preventDefault(); void handleLongPress(sticker) }}
               >
                 <span className="sticker-num">#{String(isZeroBased && slot === 0 ? '00' : slot)}</span>
@@ -313,7 +334,10 @@ export function TeamDetailPage() {
             Missing
           </div>
           <div className="mono text-xs text-mute" style={{ width: '100%' }}>
-            Tap → got · tap again → +dupe · right-click → clear
+            {isTouchDevice
+              ? 'Tap → got · tap again → +dupe · hold → clear'
+              : 'Tap → got · tap again → +dupe · right-click → clear'
+            }
           </div>
         </div>
       </div>
