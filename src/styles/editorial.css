@@ -538,6 +538,92 @@
 .overflow-x   { overflow-x: auto; scrollbar-width: none; }
 .overflow-x::-webkit-scrollbar { display: none; }
 
+/* ─── PWA Toast ──────────────────────────────────────────────── */
+
+@keyframes toast-slide-down {
+  from { transform: translateX(-50%) translateY(-110%); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+}
+
+.pwa-toast {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(444px, calc(100vw - 28px));
+  z-index: 300;
+  animation: toast-slide-down 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.pwa-toast-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 5px 5px 0 var(--ink);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.pwa-toast-inner--offline { background: var(--bg-mint); }
+.pwa-toast-inner--update  { background: var(--bg-yellow); }
+
+.pwa-toast-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.pwa-toast-msg {
+  flex: 1;
+  min-width: 0;
+}
+
+.pwa-toast-reload {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: var(--ink);
+  color: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 80ms ease, box-shadow 80ms ease;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+}
+
+.pwa-toast-reload:hover  { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 rgba(0,0,0,0.4); }
+.pwa-toast-reload:active { transform: translate(1px,1px);   box-shadow: 1px 1px 0 rgba(0,0,0,0.3); }
+
+.pwa-toast-close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: var(--ink);
+  transition: transform 80ms ease;
+}
+
+.pwa-toast-close:hover  { transform: translate(-1px,-1px); }
+.pwa-toast-close:active { transform: translate(1px,1px); }
+
 /* ─── Group color grid ───────────────────────────────────────── */
 
 .group-grid {

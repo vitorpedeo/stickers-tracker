@@ -17,20 +17,29 @@ export function ReloadPrompt() {
   }
 
   return (
-    <aside role="alert">
-      <p>
-        {offlineReady
-          ? 'App ready to work offline.'
-          : 'New version available. Reload to update.'}
-      </p>
-      {needRefresh ? (
-        <button type="button" onClick={() => updateServiceWorker(true)}>
-          Reload
-        </button>
-      ) : null}
-      <button type="button" onClick={close}>
-        Close
-      </button>
-    </aside>
+    <>
+      <div className="pwa-toast" role="alert">
+        <div className={`pwa-toast-inner ${offlineReady ? 'pwa-toast-inner--offline' : 'pwa-toast-inner--update'}`}>
+          <span className="pwa-toast-icon" aria-hidden="true">
+            {offlineReady ? '⚡' : '↑'}
+          </span>
+          <span className="pwa-toast-msg">
+            {offlineReady ? 'Ready offline' : 'Update available'}
+          </span>
+          {needRefresh && (
+            <button
+              type="button"
+              className="pwa-toast-reload"
+              onClick={() => updateServiceWorker(true)}
+            >
+              Reload
+            </button>
+          )}
+          <button type="button" className="pwa-toast-close" onClick={close} aria-label="Dismiss">
+            ✕
+          </button>
+        </div>
+      </div>
+    </>
   )
 }
