@@ -6,7 +6,7 @@ import { repository } from '../data/repositorySingleton'
 import { buildTeamProgress } from '../domain/progress'
 import { useInitializeSeed } from '../features/stickers/hooks'
 
-const GROUP_OPTIONS = ['all', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'] as const
+const GROUP_OPTIONS = ['all', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'SPECIAL'] as const
 
 type GroupFilter = (typeof GROUP_OPTIONS)[number]
 
