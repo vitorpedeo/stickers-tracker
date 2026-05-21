@@ -23,9 +23,18 @@ export function TradePage() {
       type WantedItem = { teamId: string; slot: number }
 
       const dupesByTeam = new Map<string, DupeItem[]>()
+      const sortedTeams = [...teams].sort((left, right) => {
+        if (left.group !== right.group) {
+          return left.group.localeCompare(right.group)
+        }
+        if (left.order !== right.order) {
+          return left.order - right.order
+        }
+        return left.name.localeCompare(right.name)
+      })
       const wanted: WantedItem[] = []
 
-      for (const team of teams) {
+      for (const team of sortedTeams) {
         const teamStickers = stickers
           .filter((s) => s.teamId === team.id)
           .sort((a, b) => a.number.localeCompare(b.number))
@@ -48,13 +57,13 @@ export function TradePage() {
         0,
       )
 
-      const teamsWithDupes = Array.from(dupesByTeam.entries())
+      const teamsWithDupes = [...Array.from(dupesByTeam.entries())
         .map(([teamId, items]) => ({
           team: teams.find((t) => t.id === teamId)!,
           items,
           total: items.reduce((a, d) => a + d.count, 0),
         }))
-        .filter((x) => x.team)
+        .filter((x) => x.team)].sort((a, b) => b.total - a.total)
 
       return { teamsWithDupes, wanted, totalDupes }
     },
