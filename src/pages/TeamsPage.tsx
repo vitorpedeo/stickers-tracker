@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AppFrame } from '../components/AppFrame'
 import { repository } from '../data/repositorySingleton'
@@ -27,6 +27,21 @@ export function TeamsPage() {
       return buildTeamProgress(teams, stickers, entries)
     },
   })
+
+  const scrollRestored = useRef(false)
+
+  useEffect(() => {
+    const save = () => sessionStorage.setItem('teams-scroll', String(window.scrollY))
+    window.addEventListener('scroll', save, { passive: true })
+    return () => window.removeEventListener('scroll', save)
+  }, [])
+
+  useEffect(() => {
+    if (scrollRestored.current || isLoading || !data) return
+    const saved = sessionStorage.getItem('teams-scroll')
+    if (saved) window.scrollTo(0, Number(saved))
+    scrollRestored.current = true
+  }, [isLoading, data])
 
   const filteredTeams = useMemo(() => {
     const needle = search.trim().toLowerCase()
