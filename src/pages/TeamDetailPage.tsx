@@ -83,6 +83,7 @@ export function TeamDetailPage() {
     [],
   )
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longPressFired = useRef(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['team-detail', teamId],
@@ -173,7 +174,11 @@ export function TeamDetailPage() {
   const startLongPress = (sticker: Sticker) => (e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.pointerType === 'mouse') return
     if (longPressTimer.current) clearTimeout(longPressTimer.current)
-    longPressTimer.current = setTimeout(() => { void handleLongPress(sticker) }, 500)
+    longPressFired.current = false
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true
+      void handleLongPress(sticker)
+    }, 500)
   }
 
   const cancelLongPress = () => {
@@ -301,7 +306,10 @@ export function TeamDetailPage() {
                 type="button"
                 className={`sticker-cell ${cls}`}
                 aria-label={`Sticker ${String(slot)}`}
-                onClick={() => void handleStickerClick(sticker, copies)}
+                onClick={() => {
+                  if (longPressFired.current) { longPressFired.current = false; return }
+                  void handleStickerClick(sticker, copies)
+                }}
                 onPointerDown={startLongPress(sticker)}
                 onPointerUp={cancelLongPress}
                 onPointerCancel={cancelLongPress}
@@ -318,8 +326,16 @@ export function TeamDetailPage() {
         </div>
       </div>
 
-      {/* Legend */}
+      {/* Legend + Bulk open */}
       <div style={{ padding: '14px 18px 20px' }}>
+        <button
+          type="button"
+          className="nb-btn nb-btn--primary"
+          style={{ width: '100%', marginBottom: 12 }}
+          onClick={() => setBulkOpen(true)}
+        >
+          + Bulk add
+        </button>
         <div className="legend">
           <div className="legend-item">
             <span className="legend-swatch" style={{ background: '#8FE0B5' }} />
@@ -341,16 +357,6 @@ export function TeamDetailPage() {
           </div>
         </div>
       </div>
-
-      {/* FAB */}
-      <button
-        type="button"
-        className="nb-fab"
-        aria-label="Bulk add"
-        onClick={() => setBulkOpen(true)}
-      >
-        +
-      </button>
 
       {/* Bulk add sheet */}
       {bulkOpen && (
@@ -381,8 +387,11 @@ export function TeamDetailPage() {
                 <button
                   key={m.id}
                   type="button"
-                  className={`nb-chip${bulkMode === m.id ? ' is-active' : ''}`}
-                  style={bulkMode !== m.id ? { background: m.bg } : undefined}
+                  className="nb-chip"
+                  style={{
+                    background: bulkMode === m.id ? m.bg : '#fff',
+                    opacity: bulkMode === m.id ? 1 : 0.45,
+                  }}
                   onClick={() => setBulkMode(m.id)}
                 >
                   {m.label}
