@@ -1,3 +1,4 @@
+import { ArrowUp, X, Zap } from 'lucide-react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 export function ReloadPrompt() {
@@ -21,7 +22,7 @@ export function ReloadPrompt() {
       <div className="pwa-toast" role="alert">
         <div className={`pwa-toast-inner ${offlineReady ? 'pwa-toast-inner--offline' : 'pwa-toast-inner--update'}`}>
           <span className="pwa-toast-icon" aria-hidden="true">
-            {offlineReady ? '⚡' : '↑'}
+            {offlineReady ? <Zap size={16} /> : <ArrowUp size={16} />}
           </span>
           <span className="pwa-toast-msg">
             {offlineReady ? 'Ready offline' : 'Update available'}
@@ -36,7 +37,7 @@ export function ReloadPrompt() {
             </button>
           )}
           <button type="button" className="pwa-toast-close" onClick={close} aria-label="Dismiss">
-            ✕
+            <X size={14} />
           </button>
         </div>
       </div>
