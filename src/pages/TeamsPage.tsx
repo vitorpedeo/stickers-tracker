@@ -99,7 +99,6 @@ export function TeamsPage() {
           <Link
             key={team.id}
             to={`/teams/${team.id}`}
-            state={{ fromTeamsPage: true }}
             className="nb-card nb-card--white"
             style={{ padding: 14, display: 'block' }}
           >

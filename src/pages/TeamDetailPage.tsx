@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { repository } from '../data/repositorySingleton'
 import { fromStickerCopies, toStickerCopies } from '../domain/progress'
 import type { Sticker } from '../domain/types'
@@ -59,9 +59,11 @@ function ProgressRing({
 
 type FilterMode = 'all' | 'missing' | 'got' | 'dupes'
 type BulkMode = 'got' | 'dupe' | 'clear'
-type TeamDetailLocationState = {
-  fromTeamsPage?: boolean
-} | null
+
+function hasPreviousHistoryEntry() {
+  const historyState = window.history.state as { idx?: unknown } | null
+  return typeof historyState?.idx === 'number' && historyState.idx > 0
+}
 
 const BULK_MODE_OPTS: { id: BulkMode; label: string; bg: string }[] = [
   { id: 'got',   label: 'Mark Got',  bg: '#8FE0B5' },
@@ -72,7 +74,6 @@ const BULK_MODE_OPTS: { id: BulkMode; label: string; bg: string }[] = [
 export function TeamDetailPage() {
   const seedInit = useInitializeSeed()
   const { teamId } = useParams()
-  const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<FilterMode>('all')
@@ -175,8 +176,7 @@ export function TeamDetailPage() {
   }
 
   const handleBackToTeams = () => {
-    const state = location.state as TeamDetailLocationState
-    if (state?.fromTeamsPage) {
+    if (hasPreviousHistoryEntry()) {
       navigate(-1)
       return
     }
