@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
-import { AppFrame } from '../components/AppFrame'
 import { repository } from '../data/repositorySingleton'
 import { buildInitialCollection } from '../domain/seed'
 import { summarizeAlbum } from '../domain/progress'
@@ -154,7 +153,7 @@ export function SettingsPage() {
   const summary = data?.summary
 
   return (
-    <AppFrame>
+    <>
       {/* Top bar */}
       <div className="sticky-bar">
         <h1>SETTINGS</h1>
@@ -261,6 +260,6 @@ export function SettingsPage() {
           Reset local data
         </button>
       </div>
-    </AppFrame>
+    </>
   )
 }

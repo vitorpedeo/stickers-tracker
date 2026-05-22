@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AppFrame } from '../components/AppFrame'
 import { repository } from '../data/repositorySingleton'
 import { buildTeamProgress } from '../domain/progress'
 import { useInitializeSeed } from '../features/stickers/hooks'
@@ -28,21 +27,6 @@ export function TeamsPage() {
     },
   })
 
-  const scrollRestored = useRef(false)
-
-  useEffect(() => {
-    const save = () => sessionStorage.setItem('teams-scroll', String(window.scrollY))
-    window.addEventListener('scroll', save, { passive: true })
-    return () => window.removeEventListener('scroll', save)
-  }, [])
-
-  useEffect(() => {
-    if (scrollRestored.current || isLoading || !data) return
-    const saved = sessionStorage.getItem('teams-scroll')
-    if (saved) window.scrollTo(0, Number(saved))
-    scrollRestored.current = true
-  }, [isLoading, data])
-
   const filteredTeams = useMemo(() => {
     const needle = search.trim().toLowerCase()
     return (data ?? [])
@@ -63,7 +47,7 @@ export function TeamsPage() {
   }, [data, group, search])
 
   return (
-    <AppFrame>
+    <>
       {/* Top bar */}
       <div className="sticky-bar">
         <h1 style={{ flex: 1 }}>TEAMS</h1>
@@ -115,6 +99,7 @@ export function TeamsPage() {
           <Link
             key={team.id}
             to={`/teams/${team.id}`}
+            state={{ fromTeamsPage: true }}
             className="nb-card nb-card--white"
             style={{ padding: 14, display: 'block' }}
           >
@@ -144,6 +129,6 @@ export function TeamsPage() {
       </div>
 
       <div style={{ height: 12 }} />
-    </AppFrame>
+    </>
   )
 }

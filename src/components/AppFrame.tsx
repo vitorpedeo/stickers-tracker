@@ -1,10 +1,6 @@
 import { ArrowLeftRight, Home, Settings, Users } from 'lucide-react'
-import type { ComponentType, ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
-
-type AppFrameProps = {
-  children: ReactNode
-}
+import type { ComponentType } from 'react'
+import { NavLink, Outlet, ScrollRestoration } from 'react-router-dom'
 
 type NavItem = {
   to: string
@@ -20,11 +16,14 @@ const navItems: NavItem[] = [
   { to: '/settings', label: 'Settings', Icon: Settings,       end: false },
 ]
 
-export function AppFrame({ children }: AppFrameProps) {
+export function AppFrame() {
   return (
     <div className="app-shell">
+      <ScrollRestoration />
       <div className="app-main">
-        <div className="page-scroll">{children}</div>
+        <div className="page-scroll">
+          <Outlet />
+        </div>
       </div>
       <nav className="bottom-nav" aria-label="Primary">
         {navItems.map(({ to, label, Icon, end }) => (

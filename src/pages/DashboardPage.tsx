@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { AppFrame } from '../components/AppFrame'
 import { repository } from '../data/repositorySingleton'
 import { buildTeamProgress, summarizeAlbum } from '../domain/progress'
 import type { TeamGroup } from '../domain/types'
@@ -90,7 +89,7 @@ export function DashboardPage() {
   const pct = album?.completion ?? 0
 
   return (
-    <AppFrame>
+    <>
       {/* Header */}
       <div style={{ padding: '18px 18px 8px' }}>
         <div className="mono uc" style={{ fontSize: 11, opacity: 0.65, letterSpacing: '0.1em' }}>
@@ -184,6 +183,6 @@ export function DashboardPage() {
       </div>
 
       <div style={{ height: 20 }} />
-    </AppFrame>
+    </>
   )
 }

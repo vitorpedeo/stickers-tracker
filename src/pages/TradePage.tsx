@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { AppFrame } from '../components/AppFrame'
 import { repository } from '../data/repositorySingleton'
 import { toStickerCopies } from '../domain/progress'
 import { useInitializeSeed } from '../features/stickers/hooks'
@@ -72,7 +71,7 @@ export function TradePage() {
   const { teamsWithDupes = [], wanted = [], totalDupes = 0 } = data ?? {}
 
   return (
-    <AppFrame>
+    <>
       {/* Top bar */}
       <div className="sticky-bar">
         <h1 className="flex-1">DOUBLES</h1>
@@ -190,6 +189,6 @@ export function TradePage() {
       )}
 
       <div style={{ height: 12 }} />
-    </AppFrame>
+    </>
   )
 }

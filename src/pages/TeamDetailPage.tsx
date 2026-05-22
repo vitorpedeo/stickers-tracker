@@ -1,8 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useParams } from 'react-router-dom'
-import { AppFrame } from '../components/AppFrame'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { repository } from '../data/repositorySingleton'
 import { fromStickerCopies, toStickerCopies } from '../domain/progress'
 import type { Sticker } from '../domain/types'
@@ -61,6 +59,9 @@ function ProgressRing({
 
 type FilterMode = 'all' | 'missing' | 'got' | 'dupes'
 type BulkMode = 'got' | 'dupe' | 'clear'
+type TeamDetailLocationState = {
+  fromTeamsPage?: boolean
+} | null
 
 const BULK_MODE_OPTS: { id: BulkMode; label: string; bg: string }[] = [
   { id: 'got',   label: 'Mark Got',  bg: '#8FE0B5' },
@@ -71,6 +72,8 @@ const BULK_MODE_OPTS: { id: BulkMode; label: string; bg: string }[] = [
 export function TeamDetailPage() {
   const seedInit = useInitializeSeed()
   const { teamId } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [filter, setFilter] = useState<FilterMode>('all')
   const [bulkOpen, setBulkOpen] = useState(false)
@@ -171,6 +174,15 @@ export function TeamDetailPage() {
     await mutation.mutateAsync({ stickerId: sticker.id, copies: 0 })
   }
 
+  const handleBackToTeams = () => {
+    const state = location.state as TeamDetailLocationState
+    if (state?.fromTeamsPage) {
+      navigate(-1)
+      return
+    }
+    navigate('/teams')
+  }
+
   const startLongPress = (sticker: Sticker) => (e: React.PointerEvent<HTMLButtonElement>) => {
     if (e.pointerType === 'mouse') return
     if (longPressTimer.current) clearTimeout(longPressTimer.current)
@@ -216,20 +228,23 @@ export function TeamDetailPage() {
 
   if (isLoading) {
     return (
-      <AppFrame>
-        <div className="sticky-bar"><h1>Loading...</h1></div>
-      </AppFrame>
+      <div className="sticky-bar"><h1>Loading...</h1></div>
     )
   }
 
   if (!data?.team) {
     return (
-      <AppFrame>
-        <div className="sticky-bar">
-          <Link className="back-btn" to="/teams">←</Link>
-          <h1>Not found</h1>
-        </div>
-      </AppFrame>
+      <div className="sticky-bar">
+        <button
+          type="button"
+          className="back-btn"
+          aria-label="Back to teams"
+          onClick={handleBackToTeams}
+        >
+          ←
+        </button>
+        <h1>Not found</h1>
+      </div>
     )
   }
 
@@ -249,10 +264,17 @@ export function TeamDetailPage() {
   ]
 
   return (
-    <AppFrame>
+    <>
       {/* Top bar */}
       <div className="sticky-bar">
-        <Link className="back-btn" to="/teams">←</Link>
+        <button
+          type="button"
+          className="back-btn"
+          aria-label="Back to teams"
+          onClick={handleBackToTeams}
+        >
+          ←
+        </button>
         <h1 className="flex-1">{team.name.toUpperCase()}</h1>
         <span className="nb-tag nb-tag--pink">GRP {team.group}</span>
       </div>
@@ -451,6 +473,6 @@ export function TeamDetailPage() {
           </div>
         </div>
       )}
-    </AppFrame>
+    </>
   )
 }
