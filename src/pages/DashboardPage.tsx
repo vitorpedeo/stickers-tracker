@@ -4,6 +4,7 @@ import { repository } from '../data/repositorySingleton'
 import { buildTeamProgress, summarizeAlbum } from '../domain/progress'
 import type { TeamGroup } from '../domain/types'
 import { useInitializeSeed } from '../features/stickers/hooks'
+import { useShareMissing } from '../features/stickers/useShareMissing'
 
 const GROUPS: TeamGroup[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
 const GROUP_COLORS = ['#FFD43A', '#8FE0B5', '#FFB7C7', '#4FB3FF']
@@ -54,6 +55,7 @@ function ProgressRing({
 export function DashboardPage() {
   const seedInit = useInitializeSeed()
   const navigate = useNavigate()
+  const { share, isLoading: shareLoading, copied } = useShareMissing()
 
   const { data } = useQuery({
     queryKey: ['dashboard-view'],
@@ -90,17 +92,17 @@ export function DashboardPage() {
 
   return (
     <>
-      {/* Header */}
-      <div style={{ padding: '18px 18px 8px' }}>
-        <div className="mono uc" style={{ fontSize: 11, opacity: 0.65, letterSpacing: '0.1em' }}>
-          WORLD CUP 2026 · ALBUM
-        </div>
-        <div
-          className="display"
-          style={{ fontSize: 36, marginTop: 4, lineHeight: 0.92 }}
+      {/* Top bar */}
+      <div className="sticky-bar">
+        <h1 style={{ flex: 1 }}>ALBUM</h1>
+        <button
+          type="button"
+          className="nb-chip"
+          onClick={share}
+          disabled={shareLoading}
         >
-          WORLD CUP<br />STICKERS
-        </div>
+          {copied ? 'COPIED!' : shareLoading ? 'LOADING...' : 'SHARE MISSING'}
+        </button>
       </div>
 
       {/* Progress hero card */}
