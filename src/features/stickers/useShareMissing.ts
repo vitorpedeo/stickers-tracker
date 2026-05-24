@@ -31,6 +31,11 @@ export function useShareMissing(teamId?: string) {
   }, [])
 
   const share = async () => {
+    if (copiedTimerRef.current !== null) {
+      clearTimeout(copiedTimerRef.current)
+      copiedTimerRef.current = null
+    }
+    setCopied(false)
     setIsLoading(true)
     setError(null)
     try {
@@ -51,6 +56,7 @@ export function useShareMissing(teamId?: string) {
         copiedTimerRef.current = setTimeout(() => setCopied(false), 2000)
       }
     } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
       setError(err instanceof Error ? err : new Error(String(err)))
     } finally {
       setIsLoading(false)
