@@ -161,9 +161,12 @@ const s = StyleSheet.create({
     letterSpacing: 0.5,
   },
   rowDivider: {
+    borderStyle: 'dashed',
     borderBottomWidth: 1,
     borderBottomColor: MUTE,
-    borderBottomStyle: 'dashed',
+    borderTopWidth: 0,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
   },
   footer: {
     position: 'absolute',
