@@ -133,4 +133,47 @@ describe('useGeneratePdf', () => {
     expect(result.current.error?.message).toBe('DB error')
     expect(result.current.isLoading).toBe(false)
   })
+
+  it('ignores concurrent generate() calls', async () => {
+    const { repository } = await import('../../../data/repositorySingleton')
+    ;(repository.listTeams as ReturnType<typeof vi.fn>).mockResolvedValue([makeTeam('MEX')])
+    ;(repository.listStickers as ReturnType<typeof vi.fn>).mockResolvedValue([
+      makeSticker('s1', 'MEX', '01'),
+    ])
+    ;(repository.listEntries as ReturnType<typeof vi.fn>).mockResolvedValue([])
+
+    const { pdf } = await import('@react-pdf/renderer')
+    const { result } = renderHook(() => useGeneratePdf())
+
+    await act(async () => {
+      const first = result.current.generate()
+      const second = result.current.generate() // concurrent — should be a no-op
+      await Promise.all([first, second])
+    })
+
+    expect(pdf).toHaveBeenCalledOnce()
+  })
+
+  it('sets error when pdf().toBlob() rejects', async () => {
+    const { repository } = await import('../../../data/repositorySingleton')
+    ;(repository.listTeams as ReturnType<typeof vi.fn>).mockResolvedValue([makeTeam('MEX')])
+    ;(repository.listStickers as ReturnType<typeof vi.fn>).mockResolvedValue([
+      makeSticker('s1', 'MEX', '01'),
+    ])
+    ;(repository.listEntries as ReturnType<typeof vi.fn>).mockResolvedValue([])
+
+    const { pdf } = await import('@react-pdf/renderer')
+    ;(pdf as ReturnType<typeof vi.fn>).mockReturnValueOnce({
+      toBlob: vi.fn().mockRejectedValue(new Error('render failed')),
+    })
+
+    const { result } = renderHook(() => useGeneratePdf())
+
+    await act(async () => {
+      await result.current.generate()
+    })
+
+    expect(result.current.error?.message).toBe('render failed')
+    expect(result.current.isLoading).toBe(false)
+  })
 })
