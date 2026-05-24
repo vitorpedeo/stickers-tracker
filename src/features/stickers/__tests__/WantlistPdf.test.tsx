@@ -11,7 +11,7 @@ vi.mock('@react-pdf/renderer', () => ({
   Text: ({ children }: { children?: React.ReactNode }) => children ?? null,
   Image: () => null,
   Svg: ({ children }: { children?: React.ReactNode }) => children ?? null,
-  StyleSheet: { create: (s: unknown) => s },
+  StyleSheet: { create: <T,>(s: T): T => s },
   Font: { register: vi.fn() },
   pdf: vi.fn(() => ({
     toBlob: vi.fn().mockResolvedValue(new Blob(['pdf'], { type: 'application/pdf' })),
@@ -38,7 +38,7 @@ describe('WantlistDocument', () => {
   })
 
   it('renders to a PDF blob without throwing', async () => {
-    const blob = await (pdf as ReturnType<typeof vi.fn>)(
+    const blob = await (pdf as unknown as (el: unknown) => { toBlob: () => Promise<Blob> })(
       createElement(WantlistDocument, { teams: sample, generatedDate: 'MAY 24, 2026' }),
     ).toBlob()
     expect(blob).toBeInstanceOf(Blob)

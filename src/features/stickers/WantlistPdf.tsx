@@ -164,9 +164,6 @@ const s = StyleSheet.create({
     borderStyle: 'dashed',
     borderBottomWidth: 1,
     borderBottomColor: MUTE,
-    borderTopWidth: 0,
-    borderLeftWidth: 0,
-    borderRightWidth: 0,
   },
   footer: {
     position: 'absolute',
@@ -235,6 +232,7 @@ export function WantlistDocument({ teams, generatedDate }: Props) {
           <View style={s.titleBlock}>
             <Text style={s.titleStickers}>STICKERS</Text>
             {/* Outlined text via SVG stroke/fill — matches the hollow display style in the design */}
+            {/* SVG width = 595pt (A4) − 2 × 32pt padding */}
             <Svg height={70} width={531}>
               <SvgText x={0} y={60} fontFamily="ArchivoBlack" fontSize={56} fill="none" stroke={INK} strokeWidth={1.5}>
                 WANTED.
