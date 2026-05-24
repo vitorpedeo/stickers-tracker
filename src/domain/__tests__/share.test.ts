@@ -73,6 +73,20 @@ describe('buildMissingByTeam', () => {
     expect(result[0].missingNumbers).toEqual(['3', '12'])
   })
 
+  it('normalizes team-prefixed sticker numbers and sorts them numerically', () => {
+    const teams = [makeTeam('x', 'A', 1)]
+    const stickers = [
+      makeSticker('s10', 'x', '1-10'),
+      makeSticker('s2', 'x', '1-2'),
+      makeSticker('s1', 'x', '1-1'),
+    ]
+    const entries: CollectionEntry[] = []
+
+    const result = buildMissingByTeam(teams, stickers, entries)
+
+    expect(result[0].missingNumbers).toEqual(['1', '2', '10'])
+  })
+
   it('filters to a single team when teamId is provided', () => {
     const teams = [makeTeam('x', 'A', 1), makeTeam('y', 'A', 2)]
     const stickers = [

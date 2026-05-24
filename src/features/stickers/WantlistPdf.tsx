@@ -1,9 +1,11 @@
 import { Document, Font, Image, Page, StyleSheet, Svg, Text, View } from '@react-pdf/renderer'
 import type { Team } from '../../domain/types'
+import archivoBlackFontUrl from '../../assets/fonts/ArchivoBlack-Regular.ttf?url'
+import unFlagPngUrl from '../../assets/flags/un.png?url'
 
 Font.register({
   family: 'ArchivoBlack',
-  src: 'https://fonts.gstatic.com/s/archivoblack/v21/HTxqL289NzCGg4MzN6KJ7eW6OYuP.ttf',
+  src: archivoBlackFontUrl,
 })
 
 export type WantlistTeamData = {
@@ -93,6 +95,7 @@ const s = StyleSheet.create({
   flagImg: {
     width: 52,
     height: 52,
+    objectFit: 'cover',
   },
   teamInfo: {
     flex: 1,
@@ -186,7 +189,8 @@ const s = StyleSheet.create({
 
 function flagPngUrl(svgUrl: string): string {
   const match = svgUrl.match(/flagcdn\.com\/(.+?)\.svg$/)
-  return match ? `https://flagcdn.com/w40/${match[1]}.png` : svgUrl
+  if (!match) return svgUrl
+  return match[1] === 'un' ? unFlagPngUrl : `https://flagcdn.com/w320/${match[1]}.png`
 }
 
 function TeamRow({ item }: { item: WantlistTeamData }) {
@@ -207,7 +211,7 @@ function TeamRow({ item }: { item: WantlistTeamData }) {
           <View style={s.chipsWrap}>
             {missingNumbers.map((num) => (
               <View key={num} style={s.chip}>
-                <Text style={s.chipText}>#{num}</Text>
+                <Text style={s.chipText}>{num}</Text>
               </View>
             ))}
           </View>

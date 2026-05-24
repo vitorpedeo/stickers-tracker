@@ -106,7 +106,7 @@ export function DashboardPage() {
           onClick={generate}
           disabled={isLoading}
         >
-          {isLoading ? 'BUILDING PDF...' : 'DOWNLOAD PDF'}
+          {isLoading ? 'BUILDING...' : 'EXPORT MISSING STICKERS'}
         </button>
       </div>
 

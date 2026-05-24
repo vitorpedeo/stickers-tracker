@@ -5,6 +5,24 @@ export type MissingByTeam = {
   missingNumbers: string[]
 }
 
+function stickerDisplayNumber(sticker: Sticker): string {
+  const separatorIndex = sticker.number.lastIndexOf('-')
+  return separatorIndex === -1 ? sticker.number : sticker.number.slice(separatorIndex + 1)
+}
+
+function compareStickerNumbers(left: Sticker, right: Sticker): number {
+  const leftNumber = stickerDisplayNumber(left)
+  const rightNumber = stickerDisplayNumber(right)
+  const leftNumeric = Number(leftNumber)
+  const rightNumeric = Number(rightNumber)
+
+  if (Number.isFinite(leftNumeric) && Number.isFinite(rightNumeric) && leftNumeric !== rightNumeric) {
+    return leftNumeric - rightNumeric
+  }
+
+  return leftNumber.localeCompare(rightNumber, undefined, { numeric: true })
+}
+
 export function buildMissingByTeam(
   teams: Team[],
   stickers: Sticker[],
@@ -21,7 +39,8 @@ export function buildMissingByTeam(
     .map((team) => {
       const missingNumbers = stickers
         .filter((s) => s.teamId !== null && s.teamId === team.id && !collectedIds.has(s.id))
-        .map((s) => s.number)
+        .sort(compareStickerNumbers)
+        .map(stickerDisplayNumber)
       return { team, missingNumbers }
     })
     .filter((item) => item.missingNumbers.length > 0)
