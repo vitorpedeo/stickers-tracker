@@ -20,7 +20,7 @@ export function buildMissingByTeam(
   return filteredTeams
     .map((team) => {
       const missingNumbers = stickers
-        .filter((s) => s.teamId === team.id && !collectedIds.has(s.id))
+        .filter((s) => s.teamId !== null && s.teamId === team.id && !collectedIds.has(s.id))
         .map((s) => s.number)
       return { team, missingNumbers }
     })
