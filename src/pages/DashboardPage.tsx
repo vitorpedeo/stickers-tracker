@@ -4,7 +4,7 @@ import { repository } from '../data/repositorySingleton'
 import { buildTeamProgress, summarizeAlbum } from '../domain/progress'
 import type { TeamGroup } from '../domain/types'
 import { useInitializeSeed } from '../features/stickers/hooks'
-import { useShareMissing } from '../features/stickers/useShareMissing'
+import { useGeneratePdf } from '../features/stickers/useGeneratePdf'
 
 const GROUPS: TeamGroup[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
 const GROUP_COLORS = ['#FFD43A', '#8FE0B5', '#FFB7C7', '#4FB3FF']
@@ -55,7 +55,7 @@ function ProgressRing({
 export function DashboardPage() {
   const seedInit = useInitializeSeed()
   const navigate = useNavigate()
-  const { share, isLoading: shareLoading, copied } = useShareMissing()
+  const { generate, isLoading } = useGeneratePdf()
 
   const { data } = useQuery({
     queryKey: ['dashboard-view'],
@@ -98,10 +98,10 @@ export function DashboardPage() {
         <button
           type="button"
           className="nb-chip"
-          onClick={share}
-          disabled={shareLoading}
+          onClick={generate}
+          disabled={isLoading}
         >
-          {copied ? 'COPIED!' : shareLoading ? 'LOADING...' : 'SHARE MISSING'}
+          {isLoading ? 'BUILDING PDF...' : 'DOWNLOAD PDF'}
         </button>
       </div>
 

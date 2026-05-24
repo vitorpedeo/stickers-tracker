@@ -20,4 +20,16 @@ describe('Dashboard layout', () => {
     expect(screen.getByText(/^missing$/i)).toBeInTheDocument()
     expect(screen.getByText(/duplicate copies/i)).toBeInTheDocument()
   })
+
+  it('renders a download pdf button', async () => {
+    render(
+      <AppProviders>
+        <MemoryRouter>
+          <DashboardPage />
+        </MemoryRouter>
+      </AppProviders>,
+    )
+
+    expect(await screen.findByRole('button', { name: /download pdf/i })).toBeInTheDocument()
+  })
 })

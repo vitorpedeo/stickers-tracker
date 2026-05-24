@@ -1,5 +1,7 @@
 import { createElement, useRef, useState } from 'react'
+import type { ReactElement } from 'react'
 import { pdf } from '@react-pdf/renderer'
+import type { DocumentProps } from '@react-pdf/renderer'
 import { repository } from '../../data/repositorySingleton'
 import { buildMissingByTeam } from '../../domain/share'
 import { WantlistDocument } from './WantlistPdf'
@@ -46,7 +48,7 @@ export function useGeneratePdf() {
       }))
 
       const blob = await pdf(
-        createElement(WantlistDocument, { teams: pdfTeams, generatedDate: formatDate(new Date()) }),
+        createElement(WantlistDocument, { teams: pdfTeams, generatedDate: formatDate(new Date()) }) as ReactElement<DocumentProps>,
       ).toBlob()
 
       const url = URL.createObjectURL(blob)
