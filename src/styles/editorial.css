@@ -162,8 +162,9 @@
   color: var(--ink);
 }
 
-.nb-chip:hover  { transform: translate(-1px,-1px); }
-.nb-chip:active { transform: translate(1px,1px); }
+.nb-chip:hover    { transform: translate(-1px,-1px); }
+.nb-chip:active   { transform: translate(1px,1px); }
+.nb-chip:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: var(--shadow-sm); }
 .nb-chip.is-active { background: var(--ink); color: #fff; }
 
 .chip-count {
