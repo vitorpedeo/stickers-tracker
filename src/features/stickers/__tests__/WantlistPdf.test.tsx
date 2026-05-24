@@ -37,7 +37,7 @@ describe('WantlistDocument', () => {
     )
   })
 
-  it('renders to a PDF blob without throwing', async () => {
+  it('can be passed to pdf() which resolves to a Blob (via mock)', async () => {
     const blob = await (pdf as unknown as (el: unknown) => { toBlob: () => Promise<Blob> })(
       createElement(WantlistDocument, { teams: sample, generatedDate: 'MAY 24, 2026' }),
     ).toBlob()

@@ -55,7 +55,7 @@ function ProgressRing({
 export function DashboardPage() {
   const seedInit = useInitializeSeed()
   const navigate = useNavigate()
-  const { generate, isLoading } = useGeneratePdf()
+  const { generate, isLoading, error } = useGeneratePdf()
 
   const { data } = useQuery({
     queryKey: ['dashboard-view'],
@@ -95,6 +95,11 @@ export function DashboardPage() {
       {/* Top bar */}
       <div className="sticky-bar">
         <h1 style={{ flex: 1 }}>ALBUM</h1>
+        {error && (
+          <span className="mono text-xs" style={{ color: 'var(--bg-red)' }}>
+            PDF failed
+          </span>
+        )}
         <button
           type="button"
           className="nb-chip"
