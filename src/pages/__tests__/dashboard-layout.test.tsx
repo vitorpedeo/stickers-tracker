@@ -15,10 +15,9 @@ describe('Dashboard layout', () => {
     )
 
     expect(await screen.findByText(/album completion/i)).toBeInTheDocument()
-    expect(screen.getByText(/total stickers/i)).toBeInTheDocument()
-    expect(screen.getByText(/^collected$/i)).toBeInTheDocument()
-    expect(screen.getByText(/^missing$/i)).toBeInTheDocument()
-    expect(screen.getByText(/duplicate copies/i)).toBeInTheDocument()
+    expect(screen.getByText(/\d+ got/i)).toBeInTheDocument()
+    expect(screen.getByText(/\d+ missing/i)).toBeInTheDocument()
+    expect(screen.getByText(/\d+ dupes/i)).toBeInTheDocument()
   })
 
   it('renders a download pdf button', async () => {
