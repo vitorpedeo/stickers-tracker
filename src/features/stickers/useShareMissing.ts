@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { repository } from '../../data/repositorySingleton'
 import { buildMissingByTeam } from '../../domain/share'
 import type { MissingByTeam } from '../../domain/share'
@@ -19,9 +19,20 @@ function formatMissingText(grouped: MissingByTeam[]): string {
 export function useShareMissing(teamId?: string) {
   const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current !== null) {
+        clearTimeout(copiedTimerRef.current)
+      }
+    }
+  }, [])
 
   const share = async () => {
     setIsLoading(true)
+    setError(null)
     try {
       const [teams, stickers, entries] = await Promise.all([
         repository.listTeams(),
@@ -37,12 +48,14 @@ export function useShareMissing(teamId?: string) {
       } else {
         await navigator.clipboard.writeText(text)
         setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
+        copiedTimerRef.current = setTimeout(() => setCopied(false), 2000)
       }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)))
     } finally {
       setIsLoading(false)
     }
   }
 
-  return { share, isLoading, copied }
+  return { share, isLoading, copied, error }
 }
